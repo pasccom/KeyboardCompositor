@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Phonetic keyboard test</title>
+        <meta charset="utf-8" />
+        <style type="text/css">
+            textarea {
+                width: 500px;
+                height: 100px;
+            }
+        </style>
+    </head>
+    <body>
+        <p> Type in English <input type="text" lang="en" /></p>
+        <textarea lang="en"></textarea>
+        <p> Type in French <input type="text" lang="fr" /></p>
+        <textarea lang="fr"></textarea>
+        <p> Type in German <input type="text" lang="de" /></p>
+        <textarea lang="de"></textarea>
+        <p> Type in Russian <input type="text" lang="ru" /></p>
+        <textarea lang="ru"></textarea>
+        <script type="text/javascript">
+            function logKeyEvents(element) {
+                element.addEventListener('keydown', function(e) {
+                    console.log('KeyDown[' + element.getAttribute('lang') + ']', e);
+                });
+                element.addEventListener('keyup', function(e) {
+                    console.log('KeyUp[' + element.getAttribute('lang') + ']', e);
+                });
+                element.addEventListener('keypress', function(e) {
+                    console.log('KeyPress[' + element.getAttribute('lang') + ']', e);
+                });
+            }
+
+            for (textArea of document.getElementsByTagName('textarea'))
+                logKeyEvents(textArea);
+            for (input of document.getElementsByTagName('input'))
+                if (input.getAttribute('type') == 'text')
+                    logKeyEvents(input);
+        </script>
+    </body>
+</html>
