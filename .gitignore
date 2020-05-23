@@ -1,0 +1,11 @@
+# Output folders:
+__pycache__/
+dist/
+env/
+
+# Local configuration files:
+*.local
+
+# Others:
+*.log
+console_capture.xpi 
