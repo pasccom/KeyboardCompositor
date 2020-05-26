@@ -172,8 +172,8 @@ function installKeyMapper(element) {
             element.value = t.slice(0, posStart - l) + keys.slice(0, c) + t.slice(posStart);
             element.selectionStart = posStart - l + c;
             element.selectionEnd = posEnd - l + c;
-            e.target.dispatchEvent(new KeyboardEvent('keyup', keyEventInit));
             e.target.dispatchEvent(new KeyboardEvent('keypress', keyEventInit));
+            e.target.dispatchEvent(new KeyboardEvent('keyup', keyEventInit));
         }
     }, true);
 }
