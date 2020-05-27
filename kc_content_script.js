@@ -119,6 +119,14 @@
         "È": "Э",
     };
 
+    /*!
+     * \brief Install extension on given element
+     *
+     * This function install the extension event listener on the given element.
+     * The extension will then listen to \c keyup events and remap typed keys when needed.
+     *
+     * \param element The element on which to install the extension.
+     */
     function installKeyMapper(element) {
         console.log("Installing on:", element);
 
@@ -179,6 +187,14 @@
         }, true);
     }
 
+    /*!
+     * \brief Searches for text fields
+     *
+     * This function searches for text fields among the descendants of the given element.
+     * It currently matches \c textarea and \c input of type \c text.
+     *
+     * \param element The element to search for text fields.
+     */
     function searchTextFields(element) {
         for (const textArea of element.getElementsByTagName('textarea')) {
             if (textArea.getAttribute('lang') == 'ru') {
@@ -193,6 +209,7 @@
         }
     }
 
+    // Search for text fields in every new node using a MutationObserver
     var bodyObserver = new MutationObserver(function(mutationRecords) {
         for (const record of mutationRecords) {
             record.addedNodes.forEach(searchTextFields);
@@ -204,5 +221,6 @@
         childList: true,
     });
 
+    // Search for text fields on body
     searchTextFields(document.body);
 })();
