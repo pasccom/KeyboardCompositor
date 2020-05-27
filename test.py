@@ -44,17 +44,6 @@ def load_tests(loader, tests, pattern):
     return TestCase.loadTests(loader, tests, pattern)
 
 class BrowserTestCase(unittest.TestCase):
-    index = '''<html>
-    <head>
-        <meta charset='utf-8' />
-        <title>Test{}</title>
-    </head>
-    <body>
-        <p id="test">Click</p>
-        {}
-    </body>
-</html>'''
-
     @classmethod
     def setUpClass(cls):
         cls.baseDir = os.path.dirname(os.path.abspath(__file__))
