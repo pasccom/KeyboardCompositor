@@ -64,7 +64,7 @@ class BrowserTestCase(unittest.TestCase):
 
         cls.browser = webdriver.Firefox(profile)
         captureConsole(cls.browser, os.path.join(cls.baseDir, 'console_capture.xpi'))
-        print(cls.browser.install_addon(os.path.join(cls.baseDir, 'dist', 'phonetic_keyboard.xpi'), False))
+        print(cls.browser.install_addon(os.path.join(cls.baseDir, 'dist', 'keyboard_compositor.xpi'), False))
 
     @classmethod
     def tearDownClass(cls):

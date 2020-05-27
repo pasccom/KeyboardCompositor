@@ -1,19 +1,19 @@
 {
     "manifest_version": 2,
 
-    "name":         "Phonectic Keyboard",
-    "description":  "Type any language in phonetic",
+    "name":         "Keyboard Compositor",
+    "description":  "Type in any language using advanced composition",
     "version":      "0.1",
     "applications": {
         "gecko": {
-            "id":   "phonetic_keyboard@pas.com"
+            "id":   "keyboard_compositor@pas.com"
         }
     },
 
     "content_scripts": [
         {
             "matches": ["<all_urls>"],
-            "js": ["phonetic_keyboard.js"]
+            "js": ["kc_content_script.js"]
         }
     ]
 }
