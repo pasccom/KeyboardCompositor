@@ -148,6 +148,17 @@
     function installKeyMapper(element) {
         console.log("Installing on:", element);
 
+        element.addEventListener('keydown', function(e) {
+            if (e.key == 'Enter') {
+                var posStart = element.selectionStart;
+                var posEnd = element.selectionEnd;
+                element.blur();
+                element.focus();
+                element.selectionStart = posStart;
+                element.selectionEnd = posEnd;
+            }
+        });
+
         element.addEventListener('keyup', function(e) {
             // Do nothing if one of these modifiers is pressed:
             if (e.altKey || e.ctrlKey || e.metaKey)

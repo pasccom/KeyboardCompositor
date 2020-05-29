@@ -38,7 +38,7 @@
         <p> Type in Russian <input type="text" lang="ru" /></p>
         <textarea lang="ru"></textarea>
         <script type="text/javascript">
-            function logKeyEvents(element) {
+            function logEvents(element) {
                 element.addEventListener('keydown', function(e) {
                     console.log('KeyDown[' + element.getAttribute('lang') + ']', e);
                 });
@@ -48,13 +48,19 @@
                 element.addEventListener('keypress', function(e) {
                     console.log('KeyPress[' + element.getAttribute('lang') + ']', e);
                 });
+                element.addEventListener('focus', function(e) {
+                    console.log('Focus[' + element.getAttribute('lang') + ']', e);
+                });
+                element.addEventListener('blur', function(e) {
+                    console.log('Blur[' + element.getAttribute('lang') + ']', e);
+                });
             }
 
             for (textArea of document.getElementsByTagName('textarea'))
-                logKeyEvents(textArea);
+                logEvents(textArea);
             for (input of document.getElementsByTagName('input'))
                 if (input.getAttribute('type') == 'text')
-                    logKeyEvents(input);
+                    logEvents(input);
         </script>
     </body>
 </html>

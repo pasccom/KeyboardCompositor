@@ -17,11 +17,11 @@
 
 from selenium import webdriver
 from selenium.common import exceptions as selenium
+from selenium.webdriver.common.keys import Keys
 from PythonUtils.testdata import TestData
 from ConsoleCapture import captureConsole
 
 import os
-import time
 import unittest
 
 class TestCase(type):
@@ -62,8 +62,15 @@ class BrowserTestCase(unittest.TestCase):
     def setUp(self):
         self.browser = self.__class__.browser
         self.browser.get(os.path.join('file://' + self.__class__.baseDir, 'test.html'))
+        self.browser.captureDepth = 1
 
 class BaseTest(BrowserTestCase):
+    def assertEvent(self, event, eventType, target):
+        self.assertEqual(event['type'], eventType)
+        self.assertEqual(event['target'], target)
+        self.assertEqual(event['originalTarget'], target)
+        self.assertEqual(event['explicitOriginalTarget'], target)
+
     def assertKeyEvent(self, keyEvent, eventType, key, **kwArgs):
         self.assertEqual(keyEvent['type'], eventType)
         self.assertEqual(keyEvent['key'], key)
@@ -92,7 +99,7 @@ class BaseTest(BrowserTestCase):
             textElement.send_keys(keys)
             self.assertEqual(textElement.get_property('value'), letter * i)
 
-        capture = self.browser.getConsoleCapture()
+        capture = [record for record in self.browser.getConsoleCapture() if record['arguments'][0].startswith('Key')]
         numEvents = 3 if (keys == letter) else 8
         self.assertEqual(len(capture), 4*numEvents)
         for i in range(0, 4):
@@ -134,7 +141,7 @@ class BaseTest(BrowserTestCase):
             textElement.send_keys(keys)
             self.assertEqual(textElement.get_property('value'), letter * i)
 
-        capture = self.browser.getConsoleCapture()
+        capture = [record for record in self.browser.getConsoleCapture() if record['arguments'][0].startswith('Key')]
         numEvents = 5 * len(keys) + 3
         self.assertEqual(len(capture), 4*numEvents)
         for i in range(0, 4):
@@ -170,7 +177,7 @@ class BaseTest(BrowserTestCase):
             textElement.send_keys(keys)
             self.assertEqual(textElement.get_property('value'), letter * i)
 
-        capture = self.browser.getConsoleCapture()
+        capture = [record for record in self.browser.getConsoleCapture() if record['arguments'][0].startswith('Key')]
         numEvents = 11 + 2 * len(keys) + 3
         self.assertEqual(len(capture), 4*numEvents)
         for i in range(0, 4):
@@ -214,7 +221,7 @@ class BaseTest(BrowserTestCase):
             textElement.send_keys(keys)
             self.assertEqual(textElement.get_property('value'), letter * i)
 
-        capture = self.browser.getConsoleCapture()
+        capture = [record for record in self.browser.getConsoleCapture() if record['arguments'][0].startswith('Key')]
         numEvents = 33
         self.assertEqual(len(capture), 4*numEvents)
         for i in range(0, 4):
@@ -305,7 +312,7 @@ class BaseTest(BrowserTestCase):
         for keys in inputData.split(' '):
             textElement.send_keys(keys)
 
-            capture = self.browser.getConsoleCapture()
+            capture = [record for record in self.browser.getConsoleCapture() if record['arguments'][0].startswith('Key')]
             self.assertEqual(capture[-3]['arguments'][0], f'KeyDown[{lang}]')
             self.assertKeyEvent(capture[-3]['arguments'][1], 'keydown', outputData[l])
             self.assertEqual(capture[-2]['arguments'][0], f'KeyPress[{lang}]')
@@ -315,6 +322,34 @@ class BaseTest(BrowserTestCase):
 
             l = l + 1
             self.assertEqual(textElement.get_property('value'), outputData[0:l])
+
+    def testEnter(self):
+        lang = 'ru'
+        textElement = self.getTextElement(lang)
+        self.browser.clearConsoleCapture()
+        textElement.send_keys(Keys.ENTER)
+        capture = self.browser.getConsoleCapture()[1:]
+
+        focusEvent = None
+        blurEvent = None
+        for record in capture:
+            if (record['arguments'][0] == f'Blur[{lang}]'):
+                if focusEvent is not None:
+                    self.fail("Focus event occured before blur event")
+                if blurEvent is None:
+                    blurEvent = record['arguments'][1]
+                else:
+                    self.fail("Captured two blur events")
+            if (record['arguments'][0] == f'Focus[{lang}]'):
+                if blurEvent is None:
+                    self.fail("Focus event occured before blur event")
+                if focusEvent is None:
+                    focusEvent = record['arguments'][1]
+                else:
+                    self.fail("Captured two focus events")
+        self.assertEvent(blurEvent, 'blur', textElement)
+        self.assertEvent(focusEvent, 'focus', textElement)
+
 
 class TextAreaTest(BaseTest, metaclass=TestCase):
     def getTextElement(self, lang):
