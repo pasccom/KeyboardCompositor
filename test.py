@@ -62,7 +62,7 @@ class BrowserTestCase(unittest.TestCase):
     def setUp(self):
         self.browser = self.__class__.browser
         self.browser.get(os.path.join('file://' + self.__class__.baseDir, 'test.html'))
-        self.browser.captureDepth = 1
+        self.browser.consoleCapture.depth = 1
 
 class BaseTest(BrowserTestCase):
     def assertEvent(self, event, eventType, target):
@@ -92,14 +92,14 @@ class BaseTest(BrowserTestCase):
         [{'lang': "ru", 'keys': k, 'letter': l} for k, l in zip("abcdefgijklmnoprtuvxzè", "абсдефгижклмнопртувхзэ")],
     afterEach=lambda self: self.clearTextElements())
     def testSingleKey(self, lang, keys, letter):
-        self.browser.clearConsoleCapture()
+        del self.browser.consoleCapture
         textElement = self.getTextElement(lang)
 
         for i in range(1, 5):
             textElement.send_keys(keys)
             self.assertEqual(textElement.get_property('value'), letter * i)
 
-        capture = [record for record in self.browser.getConsoleCapture() if record['arguments'][0].startswith('Key')]
+        capture = [record for record in self.browser.consoleCapture() if record['arguments'][0].startswith('Key')]
         numEvents = 3 if (keys == letter) else 8
         self.assertEqual(len(capture), 4*numEvents)
         for i in range(0, 4):
@@ -134,14 +134,14 @@ class BaseTest(BrowserTestCase):
         }).items()],
     afterEach=lambda self: self.clearTextElements())
     def testPrefixComposition(self, lang, keys, letter):
-        self.browser.clearConsoleCapture()
+        del self.browser.consoleCapture
         textElement = self.getTextElement(lang)
 
         for i in range(1, 5):
             textElement.send_keys(keys)
             self.assertEqual(textElement.get_property('value'), letter * i)
 
-        capture = [record for record in self.browser.getConsoleCapture() if record['arguments'][0].startswith('Key')]
+        capture = [record for record in self.browser.consoleCapture() if record['arguments'][0].startswith('Key')]
         numEvents = 5 * len(keys) + 3
         self.assertEqual(len(capture), 4*numEvents)
         for i in range(0, 4):
@@ -170,14 +170,14 @@ class BaseTest(BrowserTestCase):
         [{'lang': "ru", 'keys': k, 'letter': l} for k, l in dict({"ts": "ц", "tS": "ц", "ch": "ч", "cH": "ч"}).items()],
     afterEach=lambda self: self.clearTextElements())
     def testSuffixComposition(self, lang, keys, letter):
-        self.browser.clearConsoleCapture()
+        del self.browser.consoleCapture
         textElement = self.getTextElement(lang)
 
         for i in range(1, 5):
             textElement.send_keys(keys)
             self.assertEqual(textElement.get_property('value'), letter * i)
 
-        capture = [record for record in self.browser.getConsoleCapture() if record['arguments'][0].startswith('Key')]
+        capture = [record for record in self.browser.consoleCapture() if record['arguments'][0].startswith('Key')]
         numEvents = 11 + 2 * len(keys) + 3
         self.assertEqual(len(capture), 4*numEvents)
         for i in range(0, 4):
@@ -214,14 +214,14 @@ class BaseTest(BrowserTestCase):
             "shch": "щ", "shcH": "щ", "shCh": "щ", "shCH": "щ", "sHch": "щ", "sHcH": "щ", "sHCh": "щ", "sHCH": "щ",         # shcha
         }).items()], afterEach=lambda self: self.clearTextElements())
     def testShchaComposition(self, lang, keys, letter):
-        self.browser.clearConsoleCapture()
+        del self.browser.consoleCapture
         textElement = self.getTextElement(lang)
 
         for i in range(1, 5):
             textElement.send_keys(keys)
             self.assertEqual(textElement.get_property('value'), letter * i)
 
-        capture = [record for record in self.browser.getConsoleCapture() if record['arguments'][0].startswith('Key')]
+        capture = [record for record in self.browser.consoleCapture() if record['arguments'][0].startswith('Key')]
         numEvents = 33
         self.assertEqual(len(capture), 4*numEvents)
         for i in range(0, 4):
@@ -306,13 +306,13 @@ class BaseTest(BrowserTestCase):
         },
     }, afterEach=lambda self: self.clearTextElements())
     def testAlphabet(self, lang, inputData, outputData):
-        self.browser.clearConsoleCapture()
+        del self.browser.consoleCapture
         textElement = self.getTextElement(lang)
         l = 0
         for keys in inputData.split(' '):
             textElement.send_keys(keys)
 
-            capture = [record for record in self.browser.getConsoleCapture() if record['arguments'][0].startswith('Key')]
+            capture = [record for record in self.browser.consoleCapture() if record['arguments'][0].startswith('Key')]
             self.assertEqual(capture[-3]['arguments'][0], f'KeyDown[{lang}]')
             self.assertKeyEvent(capture[-3]['arguments'][1], 'keydown', outputData[l])
             self.assertEqual(capture[-2]['arguments'][0], f'KeyPress[{lang}]')
@@ -326,9 +326,9 @@ class BaseTest(BrowserTestCase):
     def testEnter(self):
         lang = 'ru'
         textElement = self.getTextElement(lang)
-        self.browser.clearConsoleCapture()
+        del self.browser.consoleCapture
         textElement.send_keys(Keys.ENTER)
-        capture = self.browser.getConsoleCapture()[1:]
+        capture = self.browser.consoleCapture()[1:]
 
         focusEvent = None
         blurEvent = None
