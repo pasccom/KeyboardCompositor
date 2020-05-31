@@ -19,123 +19,7 @@
 (function() {
     'use strict'
 
-    var mapping = {
-        // Lower case letters:
-        // -------------------
-        a : "а",
-        b : "б",
-        c : "с",
-        d : "д",
-        e : "е",
-        f : "ф",
-        g : "г",
-        // No h
-        i : "и",
-        j : "ж",
-        k : "к",
-        l : "л",
-        m : "м",
-        n : "н",
-        o : "о",
-        p : "п",
-        // No q
-        r : "р",
-        // No s
-        t : "т",
-        u : "у",
-        v : "в",
-        // No w
-        x : "х",
-        // No y
-        z : "з",
-        // Soft vovels:
-        ya : "я",
-        yA : "я",
-        yi : "й",
-        yI : "й",
-        yo : "ё",
-        yO : "ё",
-        yu : "ю",
-        yU : "ю",
-        yy : "ы",
-        yY : "ы",
-        // Compound letters:
-        "тs" : "ц",
-        "тS" : "ц",
-        "sh" : "ш",
-        "sH" : "ш",
-        "сh" : "ч",
-        "сH" : "ч",
-        "шсh" : "щ",
-        "шсH" : "щ",
-        "шСh" : "щ",
-        "шСH" : "щ",
-        // Signs:
-        qd : "ъ",
-        qD : "ъ",
-        qs : "ь",
-        qS : "ь",
-        // Accented letters:
-        "è": "э",
-
-        // Upper case letters:
-        // -------------------
-        A : "А",
-        B : "Б",
-        C : "С",
-        D : "Д",
-        E : "Е",
-        F : "Ф",
-        G : "Г",
-        // No H
-        I : "И",
-        J : "Ж",
-        K : "К",
-        L : "Л",
-        M : "М",
-        N : "Н",
-        O : "О",
-        P : "П",
-        // No Q
-        R : "Р",
-        // No S
-        T : "Т",
-        U : "У",
-        V : "В",
-        // No W
-        X : "Х",
-        // No Y
-        Z : "З",
-        // Soft vovels:
-        YA : "Я",
-        Ya : "Я",
-        YI : "Й",
-        Yi : "Й",
-        YO : "Ё",
-        Yo : "Ё",
-        YU : "Ю",
-        Yu : "Ю",
-        YY : "Ы",
-        Yy : "Ы",
-        // Compound letters:
-        "ТS" : "Ц",
-        "Тs" : "Ц",
-        "SH" : "Ш",
-        "Sh" : "Ш",
-        "СH" : "Ч",
-        "Сh" : "Ч",
-        "ШСH" : "Щ",
-        "ШСh" : "Щ",
-        "ШсH" : "Щ",
-        "Шсh" : "Щ",
-        // Signs:
-        QD : "Ъ",
-        Qd : "Ъ",
-        QS : "Ь",
-        Qs : "Ь",
-        // Accented letters:
-        "È": "Э",
-    };
+    var mappings = {}; // Mapping cache
 
     /*!
      * \brief Install extension on given element
@@ -150,12 +34,12 @@
 
         element.addEventListener('keydown', function(e) {
             if (e.key == 'Enter') {
-                var posStart = element.selectionStart;
-                var posEnd = element.selectionEnd;
-                element.blur();
-                element.focus();
-                element.selectionStart = posStart;
-                element.selectionEnd = posEnd;
+                var posStart = e.target.selectionStart;
+                var posEnd = e.target.selectionEnd;
+                e.target.blur();
+                e.target.focus();
+                e.target.selectionStart = posStart;
+                e.target.selectionEnd = posEnd;
             }
         });
 
@@ -163,13 +47,21 @@
             // Do nothing if one of these modifiers is pressed:
             if (e.altKey || e.ctrlKey || e.metaKey)
                 return;
+            // Do nothing if mapping is not loaded:
+            if (mappings[e.target.getAttribute('lang')] === undefined) {
+                console.warn("Mapping \"" + e.target.getAttribute('lang') + "\" is not loading.");
+                return;
+            } else if (mappings[e.target.getAttribute('lang')] === undefined) {
+                return;
+            }
             // Check that nothing is selected:
-            var posStart = element.selectionStart;
-            var posEnd = element.selectionEnd;
+            var posStart = e.target.selectionStart;
+            var posEnd = e.target.selectionEnd;
             if (posStart != posEnd)
                 return;
             // Apply mapping:
-            var t = element.value;
+            var mapping = mappings[e.target.getAttribute('lang')];
+            var t = e.target.value;
             for (var l = 3; l > 0; l--) {
                 if ((l <= t.length) && (mapping[t.slice(posStart - l, posStart)] !== undefined))
                     break;
@@ -190,9 +82,9 @@
                 };
 
                 e.target.dispatchEvent(new KeyboardEvent('keydown', backspaceEventInit));
-                element.value = t.slice(0, posStart - c) + t.slice(posStart);
-                element.selectionStart = posStart - c;
-                element.selectionEnd = posEnd - c;
+                e.target.value = t.slice(0, posStart - c) + t.slice(posStart);
+                e.target.selectionStart = posStart - c;
+                e.target.selectionEnd = posEnd - c;
                 e.target.dispatchEvent(new KeyboardEvent('keyup', backspaceEventInit));
             }
             // Add mapped text:
@@ -207,9 +99,9 @@
                 };
 
                 e.target.dispatchEvent(new KeyboardEvent('keydown', keyEventInit));
-                element.value = t.slice(0, posStart - l) + keys.slice(0, c) + t.slice(posStart);
-                element.selectionStart = posStart - l + c;
-                element.selectionEnd = posEnd - l + c;
+                e.target.value = t.slice(0, posStart - l) + keys.slice(0, c) + t.slice(posStart);
+                e.target.selectionStart = posStart - l + c;
+                e.target.selectionEnd = posEnd - l + c;
                 e.target.dispatchEvent(new KeyboardEvent('keypress', keyEventInit));
                 e.target.dispatchEvent(new KeyboardEvent('keyup', keyEventInit));
             }
@@ -223,33 +115,78 @@
      * It currently matches \c textarea and \c input of type \c text.
      *
      * \param element The element to search for text fields.
+     * \param list The list of available mappings.
      */
-    function searchTextFields(element) {
+    function searchTextFields(element, list) {
+        // Search for text areas
         for (const textArea of element.getElementsByTagName('textarea')) {
-            if (textArea.getAttribute('lang') == 'ru') {
-                installKeyMapper(textArea);
-            }
+            list.forEach((mapping) => {
+                if (textArea.getAttribute('lang') == mapping) {
+                    loadMapping(mapping);
+                    installKeyMapper(textArea);
+                }
+            });
         }
 
+        // Search for text inputs
         for (const input of element.getElementsByTagName('input')) {
-            if ((input.getAttribute('type') == 'text') && (input.getAttribute('lang') == 'ru')) {
-                installKeyMapper(input);
-            }
+            list.forEach((mapping) => {
+                if ((input.getAttribute('type') == 'text') && (input.getAttribute('lang') == mapping)) {
+                    loadMapping(mapping);
+                    installKeyMapper(input);
+                }
+            });
         }
     }
 
-    // Search for text fields in every new node using a MutationObserver
-    var bodyObserver = new MutationObserver(function(mutationRecords) {
-        for (const record of mutationRecords) {
-            record.addedNodes.forEach(searchTextFields);
+    /*!
+     * \brief Load a mapping
+     *
+     * This function loads a mapping in the mapping cache, if it is not already loaded.
+     *
+     * \param name The name of the mapping to load.
+     */
+    function loadMapping(name)
+    {
+        if (mappings[name] === undefined) {
+            mappings[name] = null;
+            fetch(browser.runtime.getURL("mappings/" + name + ".json"), {method: "GET"})
+                .then((response) => response.json())
+                .then((mapping) => {mappings[name] = mapping;})
+                .catch((error) => {console.error(error);});
         }
-    });
+    }
 
-    bodyObserver.observe(document.body, {
-        subtree: true,
-        childList: true,
-    });
+    /*!
+     * \brief Install mappings
+     *
+     * This function starts monitoring for DOM mutation on the web page,
+     * so that when a text field is added it can install a key mapper.
+     *
+     * \param list The list of available mappings.
+     */
+    function installMappings(list)
+    {
+        console.log("Installing mappings:", list);
 
-    // Search for text fields on body
-    searchTextFields(document.body);
+        // Search for text fields in every new node using a MutationObserver
+        var bodyObserver = new MutationObserver(function(mutationRecords) {
+            for (const record of mutationRecords) {
+                record.addedNodes.forEach((element) => {searchTextFields(element, list);});
+            }
+        });
+
+        bodyObserver.observe(document.body, {
+            subtree: true,
+            childList: true,
+        });
+
+        // Search for text fields on body
+        searchTextFields(document.body, list);
+    }
+
+    fetch(browser.runtime.getURL("mappings/list.json"), {method: "GET"})
+        .then((response) => response.json())
+        .then((list) => {installMappings(list);})
+        .catch((error) => {console.error(error);});
 })();
