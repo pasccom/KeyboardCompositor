@@ -15,5 +15,9 @@
             "matches": ["<all_urls>"],
             "js": ["kc_content_script.js"]
         }
+    ],
+
+    "web_accessible_resources": [
+        "mappings"
     ]
 }

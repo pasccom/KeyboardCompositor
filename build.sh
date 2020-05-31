@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Copyright 2020 Pascal COMBES <pascom@orange.fr>
 # 
 # This file is part of KeyboardCompositor.
@@ -16,5 +16,18 @@
 # You should have received a copy of the GNU General Public License
 # along with KeyboardCompositor. If not, see <http://www.gnu.org/licenses/>
 
+BASE_PATH="$(dirname "$0")"
+
+# Compile mappings and list them
+mappingList=
+for mapping in $(ls "$BASE_PATH/src/mappings/"); do
+    echo -n "Processing mapping: $mapping ..."
+    cat "$BASE_PATH/src/mappings/$mapping" | sed -e 's;//.*$;;' -e 's; \+;;g' | tr -d '\n' | sed -e 's;,\(]\|}\);\1;' > "$BASE_PATH/mappings/${mapping%.*}.json"
+    mappingList="$mappingList,\"${mapping%.*}\""
+    echo "DONE"
+done
+echo -n "[${mappingList#,}]" > "$BASE_PATH/mappings/list.json"
+
+# Build the *.xpi file
 test -d dist || mkdir dist
-zip -r -FS dist/keyboard_compositor.xpi manifest.json kc_content_script.js
+zip -r -FS dist/keyboard_compositor.xpi manifest.json kc_content_script.js mappings/*.json

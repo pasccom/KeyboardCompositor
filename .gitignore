@@ -1,6 +1,7 @@
 # Output folders:
 __pycache__/
 dist/
+/mappings/
 env/
 
 # Local configuration files:
