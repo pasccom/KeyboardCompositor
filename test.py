@@ -89,7 +89,9 @@ class BaseTest(BrowserTestCase):
         [{'lang': "de", 'keys': l, 'letter': l} for l in "ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜ"] +
         [{'lang': "de", 'keys': l, 'letter': l} for l in "abcdefghijklmnopqrstuvwxyzäöüß"] +
         [{'lang': "ru", 'keys': k, 'letter': l} for k, l in zip("ABCDEFGIJKLMNOPRTUVXZÈ", "АБСДЕФГИЖКЛМНОПРТУВХЗЭ")] +
-        [{'lang': "ru", 'keys': k, 'letter': l} for k, l in zip("abcdefgijklmnoprtuvxzè", "абсдефгижклмнопртувхзэ")],
+        [{'lang': "ru", 'keys': k, 'letter': l} for k, l in zip("abcdefgijklmnoprtuvxzè", "абсдефгижклмнопртувхзэ")] +
+        [{'lang': "el", 'keys': k, 'letter': l} for k, l in zip("ABGDEZÈIKLMNOPRSTUXW", "ΑΒΓΔΕΖΗΙΚΛΜΝΟΠΡΣΤΥΧΩ")] +
+        [{'lang': "el", 'keys': k, 'letter': l} for k, l in zip("abgdezèiklmnoprstuxw", "αβγδεζηικλμνοπρστυχω")],
     afterEach=lambda self: self.clearTextElements())
     def testSingleKey(self, lang, keys, letter):
         del self.browser.consoleCapture
@@ -167,7 +169,9 @@ class BaseTest(BrowserTestCase):
 
     @TestData(
         [{'lang': "ru", 'keys': k, 'letter': l} for k, l in dict({"TS": "Ц", "Ts": "Ц", "CH": "Ч", "Ch": "Ч"}).items()] +
-        [{'lang': "ru", 'keys': k, 'letter': l} for k, l in dict({"ts": "ц", "tS": "ц", "ch": "ч", "cH": "ч"}).items()],
+        [{'lang': "ru", 'keys': k, 'letter': l} for k, l in dict({"ts": "ц", "tS": "ц", "ch": "ч", "cH": "ч"}).items()] +
+        [{'lang': "el", 'keys': k, 'letter': l} for k, l in dict({"TH": "Θ", "Th": "Θ", "KC": "Ξ", "Kc": "Ξ", "PH": "Φ", "Ph": "Φ", "PC": "Ψ", "Pc": "Ψ"}).items()] +
+        [{'lang': "el", 'keys': k, 'letter': l} for k, l in dict({"th": "θ", "tH": "θ", "kc": "ξ", "kC": "ξ", "ph": "φ", "pH": "φ", "pc": "ψ", "pC": "ψ"}).items()] ,
     afterEach=lambda self: self.clearTextElements())
     def testSuffixComposition(self, lang, keys, letter):
         del self.browser.consoleCapture
@@ -304,6 +308,17 @@ class BaseTest(BrowserTestCase):
             'inputData': "a b v g d e yo j z i yi k l m n o p r c t u f x ch sh shch ts qd yy qs è yu ya",
             'outputData': "абвгдеёжзийклмнопрстуфхчшщцъыьэюя"
         },
+        "Greek (upper)": {
+            'lang': "el",
+            'inputData': "A B G D E Z È TH I K L M N KC O P R S T U PH X PC W",
+            'outputData': "ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ"
+        },
+        "Greek (lower)": {
+            'lang': "el",
+            'inputData': "a b g d e z è th i k l m n kc o p r s t u ph x pc w",
+            'outputData': "αβγδεζηθικλμνξοπρστυφχψω"
+        },
+
     }, afterEach=lambda self: self.clearTextElements())
     def testAlphabet(self, lang, inputData, outputData):
         del self.browser.consoleCapture
