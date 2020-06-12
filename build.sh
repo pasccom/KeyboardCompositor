@@ -30,4 +30,4 @@ echo -n "[${mappingList#,}]" > "$BASE_PATH/mappings/list.json"
 
 # Build the *.xpi file
 test -d dist || mkdir dist
-zip -r -FS dist/keyboard_compositor.xpi manifest.json kc_content_script.js mappings/*.json
+zip -r -FS dist/keyboard_compositor.xpi manifest.json kc_background.js kc_content_script.js mappings/*.json
