@@ -21,18 +21,8 @@
 
     var mappings = {}; // Mapping cache
 
-    /*!
-     * \brief Install extension on given element
-     *
-     * This function install the extension event listener on the given element.
-     * The extension will then listen to \c keyup events and remap typed keys when needed.
-     *
-     * \param element The element on which to install the extension.
-     */
-    function installKeyMapper(element) {
-        console.log("Installing on:", element);
-
-        element.addEventListener('keydown', function(e) {
+    var keyMapper = {
+        onKeyDown: function(e) {
             if (e.key == 'Enter') {
                 var posStart = e.target.selectionStart;
                 var posEnd = e.target.selectionEnd;
@@ -41,18 +31,24 @@
                 e.target.selectionStart = posStart;
                 e.target.selectionEnd = posEnd;
             }
-        });
-
-        element.addEventListener('keyup', function(e) {
+        },
+        onKeyUp: function(e) {
             // Do nothing if one of these modifiers is pressed:
             if (e.altKey || e.ctrlKey || e.metaKey)
                 return;
+            // Get mapping:
+            var mapping = e.target.getAttribute('kc-lang');
+            if (!mapping)
+                mapping = e.target.getAttribute('lang');
             // Do nothing if mapping is not loaded:
-            if (mappings[e.target.getAttribute('lang')] === undefined) {
-                console.warn("Mapping \"" + e.target.getAttribute('lang') + "\" is not loading.");
+            if (mappings[mapping] === undefined) {
+                console.error("Mapping \"" + mapping + "\" is not loading.");
                 return;
-            } else if (mappings[e.target.getAttribute('lang')] === undefined) {
+            } else if (mappings[mapping] === null) {
+                console.warn("Mapping \"" + mapping + "\" is not loaded.");
                 return;
+            } else {
+                mapping = mappings[mapping];
             }
             // Check that nothing is selected:
             var posStart = e.target.selectionStart;
@@ -60,7 +56,6 @@
             if (posStart != posEnd)
                 return;
             // Apply mapping:
-            var mapping = mappings[e.target.getAttribute('lang')];
             var t = e.target.value;
             for (var l = 3; l > 0; l--) {
                 if ((l <= t.length) && (mapping[t.slice(posStart - l, posStart)] !== undefined))
@@ -105,7 +100,37 @@
                 e.target.dispatchEvent(new KeyboardEvent('keypress', keyEventInit));
                 e.target.dispatchEvent(new KeyboardEvent('keyup', keyEventInit));
             }
-        }, true);
+        },
+    };
+
+    /*!
+     * \brief Install key mapper on given element
+     *
+     * This function install the key mapper event listeners on the given element.
+     * The extension will then listen to \c keyup events and remap typed keys when needed.
+     * It will also listen to \c keydown events, as this is needed for Duolingo to work weel
+     *
+     * \param element The element on which to install the extension.
+     */
+    function installKeyMapper(element) {
+        console.log("Installing on:", element);
+
+        element.addEventListener('keydown', keyMapper.onKeyDown);
+        element.addEventListener('keyup', keyMapper.onKeyUp, true);
+    }
+
+    /*!
+     * \brief Unnstall key mapper on given element
+     *
+     * This function uninstall the key mapper event listeners on the given element.
+     *
+     * \param element The element on which to install the extension.
+     */
+    function uninstallKeyMapper(element) {
+        console.log("Uninstalling on:", element);
+
+        element.removeEventListener('keydown', keyMapper.onKeyDown);
+        element.removeEventListener('keyup', keyMapper.onKeyUp, true);
     }
 
     /*!
@@ -183,24 +208,31 @@
 
         // Search for text fields on body
         searchTextFields(document.body, list);
-    }
 
     browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
         var element = message.elementId ? browser.menus.getTargetElement(message.elementId) : document.activeElement;
         if (!element)
             return;
+        var oldKCLang = element.getAttribute('kc-lang');
 
         if (message.command == "GET_LANG") {
             sendResponse([
                 element.getAttribute('lang'),
-                element.getAttribute('kc-lang'),
+                oldKCLang,
             ]);
         } else if (message.command == "SET_LANG") {
+            loadMapping(message.lang);
             element.setAttribute('kc-lang', message.lang);
+            if (!oldKCLang && !list.includes(element.getAttribute('lang')))
+                installKeyMapper(element);
         } else if (message.command == "REMOVE_LANG") {
             element.removeAttribute('kc-lang');
+            if (oldKCLang && !list.includes(element.getAttribute('lang')))
+                uninstallKeyMapper(element);
         }
     });
+
+    }
 
     fetch(browser.runtime.getURL("mappings/list.json"), {method: "GET"})
         .then((response) => response.json())
