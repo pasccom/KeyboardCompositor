@@ -185,6 +185,23 @@
         searchTextFields(document.body, list);
     }
 
+    browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
+        var element = message.elementId ? browser.menus.getTargetElement(message.elementId) : document.activeElement;
+        if (!element)
+            return;
+
+        if (message.command == "GET_LANG") {
+            sendResponse([
+                element.getAttribute('lang'),
+                element.getAttribute('kc-lang'),
+            ]);
+        } else if (message.command == "SET_LANG") {
+            element.setAttribute('kc-lang', message.lang);
+        } else if (message.command == "REMOVE_LANG") {
+            element.removeAttribute('kc-lang');
+        }
+    });
+
     fetch(browser.runtime.getURL("mappings/list.json"), {method: "GET"})
         .then((response) => response.json())
         .then((list) => {installMappings(list.map((e) => e.code));})

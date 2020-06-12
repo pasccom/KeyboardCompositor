@@ -3,16 +3,23 @@ console.log("Coucou from background!");
 function menuItemClicked(frameId, targetElementId, mapping)
 {
     console.log("Clicked[" + mapping + "]: ", targetElementId);
-    if (mapping)
-        browser.tabs.executeScript({ // TODO notify content script instead and remove permissions
-            frameId: frameId,
-            code: `browser.menus.getTargetElement(${targetElementId}).setAttribute('kc-lang', '${mapping}');`,
-        });
-    else
-        browser.tabs.executeScript({ // TODO notify content script instead and remove permissions
-            frameId: frameId,
-            code: `browser.menus.getTargetElement(${targetElementId}).removeAttribute('kc-lang');`,
-        });
+
+    browser.tabs.query({
+        active: true,
+        currentWindow: true,
+    }).then((tabs) => {
+        if (mapping)
+            browser.tabs.sendMessage(tabs[0].id, {
+                'command': "SET_LANG",
+                'elementId': targetElementId,
+                'lang': mapping,
+            });
+        else
+            browser.tabs.sendMessage(tabs[0].id, {
+                'command': "REMOVE_LANG",
+                'elementId': targetElementId,
+            });
+    });
 }
 
 function installMappings(list) {
@@ -58,25 +65,29 @@ function installMappings(list) {
     }
 
     browser.menus.onShown.addListener((info) => {
-        browser.tabs.executeScript({ // TODO ask content script instead and remove permissions
-            frameId: info.frameId,
-            code: `[browser.menus.getTargetElement(${info.targetElementId}).getAttribute('lang'),
-                    browser.menus.getTargetElement(${info.targetElementId}).getAttribute('kc-lang')];`,
-        }).then((attributeArray) => {
-            Promise.all(kcMenuItems.map((menuItemInfo) => {
-                if (!menuItemInfo.mapping) {
-                    var mapping = list.find((e) => (e.code == attributeArray[0][0]));
-                    return browser.menus.update(menuItemInfo.id, {
-                        title: mapping ? "Default (" + mapping.name + ")" : "None",
-                        checked: menuItemInfo.mapping == attributeArray[0][1],
-                    });
-                } else {
-                    return browser.menus.update(menuItemInfo.id, {
-                        checked: menuItemInfo.mapping == attributeArray[0][1],
-                    });
-                }
-            })).then(() => {
-                browser.menus.refresh();
+        browser.tabs.query({
+            active: true,
+            currentWindow: true,
+        }).then((tabs) => {
+            browser.tabs.sendMessage(tabs[0].id, {
+                'command': "GET_LANG",
+                'elementId': info.targetElementId,
+            }, {frameId: info.frameId}).then((attributeArray) => {
+                Promise.all(kcMenuItems.map((menuItemInfo) => {
+                    if (!menuItemInfo.mapping) {
+                        var mapping = list.find((e) => (e.code == attributeArray[0]));
+                        return browser.menus.update(menuItemInfo.id, {
+                            title: mapping ? "Default (" + mapping.name + ")" : "None",
+                            checked: menuItemInfo.mapping == attributeArray[1],
+                        });
+                    } else {
+                        return browser.menus.update(menuItemInfo.id, {
+                            checked: menuItemInfo.mapping == attributeArray[1],
+                        });
+                    }
+                })).then(() => {
+                    browser.menus.refresh();
+                });
             });
         });
     });
