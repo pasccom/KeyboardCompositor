@@ -39,21 +39,21 @@ function installMappings(list) {
     for (const mapping of list) {
         kcMenuItems.push({
             id: browser.menus.create({
-                title: mapping,
+                title: mapping.name,
                 type: 'radio',
                 contexts: ['editable'],
                 onclick: function(info) {
                     if (info.editable)
-                        menuItemClicked(info.frameId, info.targetElementId, mapping);
+                        menuItemClicked(info.frameId, info.targetElementId, mapping.code);
                 },
             }, function() {
                 if (browser.runtime.lastError) {
-                    console.log("error creating item '" + mapping + "':" + browser.runtime.lastError);
+                    console.log("error creating item '" + mapping.code + "':" + browser.runtime.lastError);
                 } else {
                     console.log("item created successfully");
                 }
             }),
-            mapping: mapping,
+            mapping: mapping.code,
         });
     }
 
@@ -64,15 +64,17 @@ function installMappings(list) {
                     browser.menus.getTargetElement(${info.targetElementId}).getAttribute('kc-lang')];`,
         }).then((attributeArray) => {
             Promise.all(kcMenuItems.map((menuItemInfo) => {
-                if (!menuItemInfo.mapping)
+                if (!menuItemInfo.mapping) {
+                    var mapping = list.find((e) => (e.code == attributeArray[0][0]));
                     return browser.menus.update(menuItemInfo.id, {
-                        title: attributeArray[0][0] ? "Default (" + attributeArray[0][0] + ")" : "None",
+                        title: mapping ? "Default (" + mapping.name + ")" : "None",
                         checked: menuItemInfo.mapping == attributeArray[0][1],
                     });
-                else
+                } else {
                     return browser.menus.update(menuItemInfo.id, {
                         checked: menuItemInfo.mapping == attributeArray[0][1],
                     });
+                }
             })).then(() => {
                 browser.menus.refresh();
             });

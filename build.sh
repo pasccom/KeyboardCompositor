@@ -23,7 +23,9 @@ mappingList=
 for mapping in $(ls "$BASE_PATH/src/mappings/"); do
     echo -n "Processing mapping: $mapping ..."
     cat "$BASE_PATH/src/mappings/$mapping" | sed -e 's;//.*$;;' -e 's; \+;;g' | tr -d '\n' | sed -e 's;,\(]\|}\);\1;' > "$BASE_PATH/mappings/${mapping%.*}.json"
-    mappingList="$mappingList,\"${mapping%.*}\""
+    mappingName="$(grep '^// Name: ' "$BASE_PATH/src/mappings/$mapping" | cut -c 10-)"
+    mappingIcon="$(grep '^// Icon: ' "$BASE_PATH/src/mappings/$mapping" | cut -c 10-)"
+    mappingList="$mappingList,{\"code\":\"${mapping%.*}\", \"name\":\"${mappingName}\", \"icon\":\"${mappingIcon}\"}"
     echo "DONE"
 done
 echo -n "[${mappingList#,}]" > "$BASE_PATH/mappings/list.json"

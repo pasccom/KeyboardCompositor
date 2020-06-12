@@ -1,3 +1,5 @@
+// Name: Greek
+// Icon: gr.png
 {
     // Lower case letters:
     // -------------------

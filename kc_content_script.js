@@ -187,6 +187,6 @@
 
     fetch(browser.runtime.getURL("mappings/list.json"), {method: "GET"})
         .then((response) => response.json())
-        .then((list) => {installMappings(list);})
+        .then((list) => {installMappings(list.map((e) => e.code));})
         .catch((error) => {console.error(error);});
 })();

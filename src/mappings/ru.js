@@ -1,3 +1,5 @@
+// Name: Russian
+// Icon: ru.png
 {
     // Lower case letters:
     // -------------------
