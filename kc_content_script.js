@@ -146,8 +146,8 @@
         // Search for text areas
         for (const textArea of element.getElementsByTagName('textarea')) {
             list.forEach((mapping) => {
-                if (textArea.getAttribute('lang') == mapping) {
-                    loadMapping(mapping);
+                if (textArea.getAttribute('lang') == mapping.code) {
+                    loadMapping(mapping.code);
                     installKeyMapper(textArea);
                 }
             });
@@ -156,8 +156,8 @@
         // Search for text inputs
         for (const input of element.getElementsByTagName('input')) {
             list.forEach((mapping) => {
-                if ((input.getAttribute('type') == 'text') && (input.getAttribute('lang') == mapping)) {
-                    loadMapping(mapping);
+                if ((input.getAttribute('type') == 'text') && (input.getAttribute('lang') == mapping.code)) {
+                    loadMapping(mapping.code);
                     installKeyMapper(input);
                 }
             });
@@ -236,6 +236,6 @@
 
     fetch(browser.runtime.getURL("mappings/list.json"), {method: "GET"})
         .then((response) => response.json())
-        .then((list) => {installMappings(list.map((e) => e.code));})
+        .then((list) => {installMappings(list);})
         .catch((error) => {console.error(error);});
 })();
