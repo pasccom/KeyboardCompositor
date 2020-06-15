@@ -133,6 +133,45 @@
         element.removeEventListener('keyup', keyMapper.onKeyUp, true);
     }
 
+    function addLanguageIcon(element, mapping) {
+        var icon = document.createElement('IMG');
+        icon.setAttribute('src', browser.runtime.getURL('icons/32x32/flags/' + mapping.icon));
+        icon.setAttribute('class', 'kc-flag');
+        icon.setAttribute('alt', mapping.name);
+        icon.setAttribute('title', mapping.name);
+
+        var root = icon;
+        if (getComputedStyle(element).getPropertyValue('display') == 'block') {
+            icon.setAttribute('style', 'vertical-align: top;');
+            root = document.createElement('DIV');
+            root.setAttribute('class', 'kc-div');
+            root.appendChild(icon);
+        }
+
+        removeLanguageIcon(element);
+        if (element.nextSibling)
+            element.parentNode.insertBefore(root, element.nextSibling);
+        else
+            element.parentNode.appendChild(root);
+
+        var elementRect = element.getBoundingClientRect();
+        var iconRect = icon.getBoundingClientRect();
+
+        if (getComputedStyle(element).getPropertyValue('display') == 'block') {
+            icon.setAttribute('style', 'left: ' + (elementRect.right - iconRect.right - 4) + 'px; top: ' + (elementRect.bottom - iconRect.top - 32) + 'px;');
+        } else {
+            icon.setAttribute('style', 'margin-left: ' + (elementRect.right - iconRect.right - 32 - 4) + 'px; margin-bottom: ' + (iconRect.bottom - elementRect.bottom) + 'px;');
+        }
+    }
+
+    function removeLanguageIcon(element) {
+        var icon = element.nextElementSibling;
+        if (icon && (icon.tagName == 'IMG') && (icon.className == 'kc-flag'))
+            element.parentNode.removeChild(icon);
+        if (icon && (icon.tagName == 'DIV') && (icon.className == 'kc-div'))
+            element.parentNode.removeChild(icon);
+    }
+
     /*!
      * \brief Searches for text fields
      *
@@ -149,6 +188,7 @@
                 if (textArea.getAttribute('lang') == mapping.code) {
                     loadMapping(mapping.code);
                     installKeyMapper(textArea);
+                    addLanguageIcon(textArea, mapping);
                 }
             });
         }
@@ -159,6 +199,7 @@
                 if ((input.getAttribute('type') == 'text') && (input.getAttribute('lang') == mapping.code)) {
                     loadMapping(mapping.code);
                     installKeyMapper(input);
+                    addLanguageIcon(input, mapping);
                 }
             });
         }
@@ -223,12 +264,16 @@
         } else if (message.command == "SET_LANG") {
             loadMapping(message.lang);
             element.setAttribute('kc-lang', message.lang);
-            if (!oldKCLang && !list.includes(element.getAttribute('lang')))
+            addLanguageIcon(element, list.find((e) => (e.code == element.getAttribute('kc-lang'))));
+            if (!oldKCLang && !list.find((e) => (e.code == element.getAttribute('lang'))))
                 installKeyMapper(element);
         } else if (message.command == "REMOVE_LANG") {
+            removeLanguageIcon(element);
             element.removeAttribute('kc-lang');
-            if (oldKCLang && !list.includes(element.getAttribute('lang')))
+            if (oldKCLang && !list.find((e) => (e.code == element.getAttribute('lang'))))
                 uninstallKeyMapper(element);
+            else if (oldKCLang)
+                addLanguageIcon(element, list.find((e) => (e.code == element.getAttribute('lang'))));
         }
     });
 
