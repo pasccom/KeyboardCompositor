@@ -22,7 +22,35 @@ from PythonUtils.testdata import TestData
 from ConsoleCapture import captureConsole
 
 import os
+import subprocess
 import unittest
+
+class ImageMagick:
+    programs = {
+        'crop':    'convert',
+        'compare': 'compare'
+    }
+
+    @classmethod
+    def checkImageMagick(cls):
+        for prog in cls.programs.values():
+            imWhich = subprocess.run(['which', prog], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            if (imWhich.returncode != 0):
+                return False
+        return True
+
+    @classmethod
+    def crop(cls, src, dest, rect):
+        imCrop = subprocess.run([cls.programs['crop'], src, '-crop', f"{rect['width']}x{rect['height']}+{rect['x']}+{rect['y']}", dest])
+        return imCrop.returncode == 0
+
+    @classmethod
+    def compare(cls, src1, src2, dest):
+        imCompare = subprocess.run([cls.programs['compare'], src1, src2, '-metric', 'DSSIM', '-compose', 'clear', dest], stderr=subprocess.PIPE)
+        try:
+            return float(imCompare.stderr)
+        except (ValueError):
+            print(imCompare.stderr)
 
 class TestCase(type):
     __testCaseList = []
@@ -365,8 +393,37 @@ class BaseTest(BrowserTestCase):
         self.assertEvent(blurEvent, 'blur', textElement)
         self.assertEvent(focusEvent, 'focus', textElement)
 
+class FlagsTest(BrowserTestCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.testInput = os.path.join(cls.baseDir, 'testInput', cls.__name__)
+        cls.testOutput = os.path.join(cls.baseDir, 'testOutput', cls.__name__)
+        try:
+            os.mkdir(cls.testOutput)
+        except (FileExistsError):
+            pass
 
-class TextAreaTest(BaseTest, metaclass=TestCase):
+    @TestData(['ru', 'el'])
+    @unittest.skipUnless(ImageMagick.checkImageMagick(), 'This test requires ImageMagick')
+    def testFlag(self, lang):
+        w = 32 + 3*2 + 1
+        h = 32
+
+        rect = self.getTextElement(lang).rect
+        self.assertTrue(self.browser.save_screenshot(os.path.join(self.__class__.testOutput, f"testFlag_{lang}.png")))
+        self.assertTrue(ImageMagick.crop(os.path.join(self.__class__.testOutput, f"testFlag_{lang}.png"),
+                                         os.path.join(self.__class__.testOutput, f"testFlag_{lang}.png"),
+                                         {'width': w, 'height': 32, 'x': rect['x'] + rect['width'] - 39, 'y': rect['y'] + rect['height'] - 32}))
+
+        diff = ImageMagick.compare(os.path.join(self.__class__.testInput, f"testFlag_{lang}.png"),
+                                   os.path.join(self.__class__.testOutput, f"testFlag_{lang}.png"),
+                                   os.path.join(self.__class__.testOutput, f"testFlag_{lang}_diff.png"))
+        self.assertIsNot(diff, None)
+        print(f"DSSIM for '{lang}' is: {diff}")
+        self.assertLessEqual(diff, 0.1)
+
+class TextAreaTest(BaseTest, FlagsTest, metaclass=TestCase):
     def getTextElement(self, lang):
         return self.browser.find_element_by_css_selector(f'textarea[lang="{lang}"]')
 
@@ -374,7 +431,7 @@ class TextAreaTest(BaseTest, metaclass=TestCase):
         for textArea in self.browser.find_elements_by_tag_name('textarea'):
             textArea.clear()
 
-class TextInputTest(BaseTest, metaclass=TestCase):
+class TextInputTest(BaseTest, FlagsTest, metaclass=TestCase):
     def getTextElement(self, lang):
         return self.browser.find_element_by_css_selector(f'input[type="text"][lang="{lang}"]')
 
