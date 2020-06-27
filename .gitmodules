@@ -1,6 +1,6 @@
 [submodule "PythonUtils"]
-	path = PythonUtils
+	path = test/PythonUtils
 	url = git@github.com:pasccom/PythonUtils.git
 [submodule "ConsoleCapture"]
-	path = ConsoleCapture
+	path = test/ConsoleCapture
 	url = git@github.com:pasccom/ConsoleCapture.git

@@ -3,10 +3,16 @@ __pycache__/
 dist/
 /src/mappings/
 env/
+/test/testOutput/*
+/t/*
 
 # Local configuration files:
 *.local
 
 # Others:
+*.pyc
 *.log
 console_capture.xpi 
+
+!.keep
+

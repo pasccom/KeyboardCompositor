@@ -77,8 +77,8 @@ fi
 
 # Update ConsoleCapture:
 ANS=
-if [ -f "$SCRIPT_DIR/dist/console_capture.xpi" ]; then
-    echo "File $SCRIPT_DIR/dist/console_capture.xpi already exists. Do you want to update it (y/N)?"
+if [ -f "$SCRIPT_DIR/console_capture.xpi" ]; then
+    echo "File $SCRIPT_DIR/console_capture.xpi already exists. Do you want to update it (y/N)?"
     while true; do
         read ANS
         if [ -z "$ANS" -o "$ANS" == 'n' -o "$ANS" == 'N' ]; then
@@ -103,4 +103,5 @@ if [ -z "$ANS" ]; then
     fi
     rm console_capture.xpi 2> /dev/null
     wget "https://github.com/pasccom/ConsoleCapture/releases/download/$CC_VERSION/console_capture.xpi"
+    mv console_capture.xpi "$SCRIPT_DIR"
 fi

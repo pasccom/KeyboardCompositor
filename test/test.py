@@ -18,8 +18,8 @@
 from selenium import webdriver
 from selenium.common import exceptions as selenium
 from selenium.webdriver.common.keys import Keys
-from PythonUtils.testdata import TestData
-from ConsoleCapture import captureConsole
+from .PythonUtils.testdata import TestData
+from .ConsoleCapture import captureConsole
 
 import os
 import subprocess
@@ -52,35 +52,17 @@ class ImageMagick:
         except (ValueError):
             print(imCompare.stderr)
 
-class TestCase(type):
-    __testCaseList = []
-
-    @classmethod
-    def loadTests(metacls, loader, tests, pattern):
-        suite = unittest.TestSuite()
-        for cls in metacls.__testCaseList:
-            tests = loader.loadTestsFromTestCase(cls)
-            suite.addTests(tests)
-        return suite
-
-    def __new__(metacls, *args):
-        cls = super().__new__(metacls, *args)
-        metacls.__testCaseList += [cls]
-        return cls
-
-def load_tests(loader, tests, pattern):
-    return TestCase.loadTests(loader, tests, pattern)
-
 class BrowserTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.baseDir = os.path.dirname(os.path.abspath(__file__))
+        cls.testDir = os.path.dirname(os.path.abspath(__file__))
+        cls.baseDir = os.path.dirname(cls.testDir)
 
         profile = webdriver.FirefoxProfile()
         profile.set_preference('xpinstall.signatures.required', False)
 
         cls.browser = webdriver.Firefox(profile)
-        captureConsole(cls.browser, os.path.join(cls.baseDir, 'console_capture.xpi'))
+        captureConsole(cls.browser, os.path.join(cls.testDir, 'console_capture.xpi'))
         print(cls.browser.install_addon(os.path.join(cls.baseDir, 'dist', 'keyboard_compositor.xpi'), False))
 
     @classmethod
@@ -89,7 +71,7 @@ class BrowserTestCase(unittest.TestCase):
 
     def setUp(self):
         self.browser = self.__class__.browser
-        self.browser.get(os.path.join('file://' + self.__class__.baseDir, 'test.html'))
+        self.browser.get(os.path.join('file://' + self.__class__.testDir, 'test.html'))
         self.browser.consoleCapture.depth = 1
 
 class BaseTest(BrowserTestCase):
@@ -397,8 +379,9 @@ class FlagsTest(BrowserTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.testInput = os.path.join(cls.baseDir, 'testInput', cls.__name__)
-        cls.testOutput = os.path.join(cls.baseDir, 'testOutput', cls.__name__)
+        cls.testInput = os.path.join(cls.testDir, 'testInput', cls.__name__)
+        cls.testOutput = os.path.join(cls.testDir, 'testOutput', cls.__name__)
+        print(cls.testDir)
         try:
             os.mkdir(cls.testOutput)
         except (FileExistsError):
@@ -423,7 +406,7 @@ class FlagsTest(BrowserTestCase):
         print(f"DSSIM for '{lang}' is: {diff}")
         self.assertLessEqual(diff, 0.1)
 
-class TextAreaTest(BaseTest, FlagsTest, metaclass=TestCase):
+class TextAreaTest(BaseTest, FlagsTest):
     def getTextElement(self, lang):
         return self.browser.find_element_by_css_selector(f'textarea[lang="{lang}"]')
 
@@ -431,7 +414,7 @@ class TextAreaTest(BaseTest, FlagsTest, metaclass=TestCase):
         for textArea in self.browser.find_elements_by_tag_name('textarea'):
             textArea.clear()
 
-class TextInputTest(BaseTest, FlagsTest, metaclass=TestCase):
+class TextInputTest(BaseTest, FlagsTest):
     def getTextElement(self, lang):
         return self.browser.find_element_by_css_selector(f'input[type="text"][lang="{lang}"]')
 
