@@ -20,22 +20,26 @@ BASE_PATH="$(dirname "$0")"
 
 # Compile mappings and list them
 mappingList=
-for mapping in $(ls "$BASE_PATH/src/mappings/"); do
+for mapping in $(ls "$BASE_PATH/src/mappings.in/"); do
     echo -n "Processing mapping: $mapping ..."
-    cat "$BASE_PATH/src/mappings/$mapping" | sed -e 's;//.*$;;' -e 's; \+;;g' | tr -d '\n' | sed -e 's;,\(]\|}\);\1;' > "$BASE_PATH/mappings/${mapping%.*}.json"
-    mappingName="$(grep '^// Name: ' "$BASE_PATH/src/mappings/$mapping" | cut -c 10-)"
-    mappingIcon="$(grep '^// Icon: ' "$BASE_PATH/src/mappings/$mapping" | cut -c 10-)"
+    cat "$BASE_PATH/src/mappings.in/$mapping" | sed -e 's;//.*$;;' -e 's; \+;;g' | tr -d '\n' | sed -e 's;,\(]\|}\);\1;' > "$BASE_PATH/src/mappings/${mapping%.*}.json"
+    mappingName="$(grep '^// Name: ' "$BASE_PATH/src/mappings.in/$mapping" | cut -c 10-)"
+    mappingIcon="$(grep '^// Icon: ' "$BASE_PATH/src/mappings.in/$mapping" | cut -c 10-)"
     mappingList="$mappingList,{\"code\":\"${mapping%.*}\", \"name\":\"${mappingName}\", \"icon\":\"${mappingIcon}\"}"
     echo "DONE"
 done
-echo -n "[${mappingList#,}]" > "$BASE_PATH/mappings/list.json"
+echo -n "[${mappingList#,}]" > "$BASE_PATH/src/mappings/list.json"
 
 # Build the *.xpi file
 test -d dist || mkdir dist
-zip -r -FS dist/keyboard_compositor.xpi \
-    manifest.json                       \
-    kc_background.js                    \
-    kc_content_script.js                \
-    kc_content_script.css               \
-    mappings/*.json                     \
+pushd src
+zip -r -FS ../dist/keyboard_compositor.xpi \
+    manifest.json                          \
+    kc_background.js                       \
+    kc_content_script.js                   \
+    kc_content_script.css                  \
+    mappings/*.json                        \
     icons/32x32/flags/*.png
+popd
+
+
