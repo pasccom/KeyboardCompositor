@@ -76,7 +76,7 @@ class BaseTest(BrowserTestCase):
 
     def setUp(self):
         super().setUp()
-        self.browser.get(os.path.join('file://' + self.__class__.testDir, 'test_mapping.html'))
+        self.loadTestPage()
         self.browser.consoleCapture.depth = 1
 
     def assertEvent(self, event, eventType, target):
@@ -383,25 +383,29 @@ class FlagsTest(BrowserTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+
         cls.testInput = os.path.join(cls.testDir, 'testInput', cls.__name__)
         cls.testOutput = os.path.join(cls.testDir, 'testOutput', cls.__name__)
-        print(cls.testDir)
+
         try:
             os.mkdir(cls.testOutput)
         except (FileExistsError):
             pass
 
-    @TestData(['ru', 'el'])
-    @unittest.skipUnless(ImageMagick.checkImageMagick(), 'This test requires ImageMagick')
-    def testFlag(self, lang):
+    def checkFlag(self, element, lang):
         w = 32 + 3*2 + 1
         h = 32
 
-        rect = self.getTextElement(lang).rect
+        self.browser.execute_script("arguments[0].blur();", element)
         self.assertTrue(self.browser.save_screenshot(os.path.join(self.__class__.testOutput, f"testFlag_{lang}.png")))
         self.assertTrue(ImageMagick.crop(os.path.join(self.__class__.testOutput, f"testFlag_{lang}.png"),
                                          os.path.join(self.__class__.testOutput, f"testFlag_{lang}.png"),
-                                         {'width': w, 'height': 32, 'x': rect['x'] + rect['width'] - 39, 'y': rect['y'] + rect['height'] - 32}))
+                                         {
+                                             'width': w,
+                                             'height': h,
+                                             'x': element.rect['x'] + element.rect['width'] - w,
+                                             'y': element.rect['y'] + element.rect['height'] - h
+                                         }))
 
         diff = ImageMagick.compare(os.path.join(self.__class__.testInput, f"testFlag_{lang}.png"),
                                    os.path.join(self.__class__.testOutput, f"testFlag_{lang}.png"),
@@ -410,7 +414,99 @@ class FlagsTest(BrowserTestCase):
         print(f"\nDSSIM for '{lang}' is: {diff} ... ", end='')
         self.assertLessEqual(diff, 0.1)
 
-class TextAreaTest(BaseTest, FlagsTest):
+    def setUp(self):
+        super().setUp()
+        self.loadTestPage()
+        self.browser.consoleCapture.depth = 1
+
+    @TestData(['ru', 'el'])
+    @unittest.skipUnless(ImageMagick.checkImageMagick(), 'This test requires ImageMagick')
+    def testFlag(self, lang):
+        self.checkFlag(self.getTextElement(lang), lang)
+
+class MessagesTest(BrowserTestCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        print(cls.browser.install_addon(os.path.join(cls.testDir, 'dist', 'kc_test.xpi'), False))
+
+    def loadTestPage(self):
+        pass
+
+    @TestData(['en', 'fr', 'de', 'ru', 'el'], beforeEach=loadTestPage)
+    def testGetLang(self, lang):
+        element = self.getTextElement(lang)
+        ans = self.browser.execute_async_script("kcTest.sendMessage({command: 'GET_LANG'}, arguments[0]).then(arguments[arguments.length - 1]);", element)
+        self.assertEqual(ans, [lang, None])
+
+    @TestData([
+        {'lang': 'en', 'kcLang': 'ru'},
+        {'lang': 'fr', 'kcLang': 'ru'},
+        {'lang': 'de', 'kcLang': 'ru'},
+        {'lang': 'ru', 'kcLang': 'ru'},
+        {'lang': 'el', 'kcLang': 'ru'},
+        {'lang': 'en', 'kcLang': 'el'},
+        {'lang': 'fr', 'kcLang': 'el'},
+        {'lang': 'de', 'kcLang': 'el'},
+        {'lang': 'ru', 'kcLang': 'el'},
+        {'lang': 'el', 'kcLang': 'el'},
+    ], beforeEach=loadTestPage)
+    def testSetLang(self, lang, kcLang):
+        element = self.getTextElement(lang)
+
+        ans = self.browser.execute_async_script("kcTest.sendMessage({command: 'GET_LANG'}, arguments[0]).then(arguments[arguments.length - 1]);", element)
+        self.assertEqual(ans, [lang, None])
+
+        self.browser.execute_script(f"kcTest.sendMessage({{command: 'SET_LANG', lang: '{kcLang}'}}, arguments[0]).then(arguments[arguments.length - 1]);", element)
+        ans = self.browser.execute_async_script("kcTest.sendMessage({command: 'GET_LANG'}, arguments[0]).then(arguments[arguments.length - 1]);", element)
+        self.assertEqual(ans, [lang, kcLang])
+
+        self.browser.execute_script("kcTest.sendMessage({command: 'REMOVE_LANG'}, arguments[0]).then(arguments[arguments.length - 1]);", element)
+        ans = self.browser.execute_async_script("kcTest.sendMessage({command: 'GET_LANG'}, arguments[0]).then(arguments[arguments.length - 1]);", element)
+        self.assertEqual(ans, [lang, None])
+
+class DynamicFlagsTest(FlagsTest, MessagesTest):
+
+    def setUp(self):
+        super(FlagsTest, self).setUp()
+
+    def loadTestPage(self):
+        pass
+
+    @TestData([
+        {'lang': 'en', 'kcLang': 'ru'},
+        {'lang': 'fr', 'kcLang': 'ru'},
+        {'lang': 'de', 'kcLang': 'ru'},
+        {'lang': 'ru', 'kcLang': 'ru'},
+        {'lang': 'el', 'kcLang': 'ru'},
+        {'lang': 'en', 'kcLang': 'el'},
+        {'lang': 'fr', 'kcLang': 'el'},
+        {'lang': 'de', 'kcLang': 'el'},
+        {'lang': 'ru', 'kcLang': 'el'},
+        {'lang': 'el', 'kcLang': 'el'},
+    ], beforeEach=loadTestPage)
+    @unittest.skipUnless(ImageMagick.checkImageMagick(), 'This test requires ImageMagick')
+    def testFlagSetLang(self, lang, kcLang):
+        element = self.getTextElement(lang)
+
+        ans = self.browser.execute_async_script("kcTest.sendMessage({command: 'GET_LANG'}, arguments[0]).then(arguments[arguments.length - 1]);", element)
+        self.assertEqual(ans, [lang, None])
+        self.checkFlag(element, lang)
+
+        self.browser.execute_script(f"kcTest.sendMessage({{command: 'SET_LANG', lang: '{kcLang}'}}, arguments[0]).then(arguments[arguments.length - 1]);", element)
+        ans = self.browser.execute_async_script("kcTest.sendMessage({command: 'GET_LANG'}, arguments[0]).then(arguments[arguments.length - 1]);", element)
+        self.assertEqual(ans, [lang, kcLang])
+        self.checkFlag(element, kcLang)
+
+        self.browser.execute_script("kcTest.sendMessage({command: 'REMOVE_LANG'}, arguments[0]).then(arguments[arguments.length - 1]);", element)
+        ans = self.browser.execute_async_script("kcTest.sendMessage({command: 'GET_LANG'}, arguments[0]).then(arguments[arguments.length - 1]);", element)
+        self.assertEqual(ans, [lang, None])
+        self.checkFlag(element, lang)
+
+class TextAreaTest(BaseTest, DynamicFlagsTest):
+    def loadTestPage(self):
+        self.browser.get(os.path.join('file://' + self.__class__.testDir, 'test_mapping.html'))
+
     def getTextElement(self, lang):
         return self.browser.find_element_by_css_selector(f'textarea[lang="{lang}"]')
 
@@ -418,7 +514,10 @@ class TextAreaTest(BaseTest, FlagsTest):
         for textArea in self.browser.find_elements_by_tag_name('textarea'):
             textArea.clear()
 
-class TextInputTest(BaseTest, FlagsTest):
+class TextInputTest(BaseTest, DynamicFlagsTest):
+    def loadTestPage(self):
+        self.browser.get(os.path.join('file://' + self.__class__.testDir, 'test_mapping.html'))
+
     def getTextElement(self, lang):
         return self.browser.find_element_by_css_selector(f'input[type="text"][lang="{lang}"]')
 
