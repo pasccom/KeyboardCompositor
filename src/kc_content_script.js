@@ -250,33 +250,32 @@
         // Search for text fields on body
         searchTextFields(document.body, list);
 
-    browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
-        var element = message.elementId ? browser.menus.getTargetElement(message.elementId) : document.activeElement;
-        if (!element)
-            return;
-        var oldKCLang = element.getAttribute('kc-lang');
+        browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
+            var element = message.elementId ? browser.menus.getTargetElement(message.elementId) : document.activeElement;
+            if (!element)
+                return;
+            var oldKCLang = element.getAttribute('kc-lang');
 
-        if (message.command == "GET_LANG") {
-            sendResponse([
-                element.getAttribute('lang'),
-                oldKCLang,
-            ]);
-        } else if (message.command == "SET_LANG") {
-            loadMapping(message.lang);
-            element.setAttribute('kc-lang', message.lang);
-            addLanguageIcon(element, list.find((e) => (e.code == element.getAttribute('kc-lang'))));
-            if (!oldKCLang && !list.find((e) => (e.code == element.getAttribute('lang'))))
-                installKeyMapper(element);
-        } else if (message.command == "REMOVE_LANG") {
-            removeLanguageIcon(element);
-            element.removeAttribute('kc-lang');
-            if (oldKCLang && !list.find((e) => (e.code == element.getAttribute('lang'))))
-                uninstallKeyMapper(element);
-            else if (oldKCLang)
-                addLanguageIcon(element, list.find((e) => (e.code == element.getAttribute('lang'))));
-        }
-    });
-
+            if (message.command == "GET_LANG") {
+                sendResponse([
+                    element.getAttribute('lang'),
+                    oldKCLang,
+                ]);
+            } else if (message.command == "SET_LANG") {
+                loadMapping(message.lang);
+                element.setAttribute('kc-lang', message.lang);
+                addLanguageIcon(element, list.find((e) => (e.code == element.getAttribute('kc-lang'))));
+                if (!oldKCLang && !list.find((e) => (e.code == element.getAttribute('lang'))))
+                    installKeyMapper(element);
+            } else if (message.command == "REMOVE_LANG") {
+                removeLanguageIcon(element);
+                element.removeAttribute('kc-lang');
+                if (oldKCLang && !list.find((e) => (e.code == element.getAttribute('lang'))))
+                    uninstallKeyMapper(element);
+                else if (oldKCLang)
+                    addLanguageIcon(element, list.find((e) => (e.code == element.getAttribute('lang'))));
+            }
+        });
     }
 
     fetch(browser.runtime.getURL("mappings/list.json"), {method: "GET"})
