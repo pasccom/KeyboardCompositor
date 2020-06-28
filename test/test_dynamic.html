@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<!-- Copyright 2020 Pascal COMBES <pascom@orange.fr>
+     
+     This file is part of KeyboardCompositor.
+     
+     KeyboardCompositor is free software: you can redistribute it and/or modify
+     it under the terms of the GNU General Public License as published by
+     the Free Software Foundation, either version 3 of the License, or
+     (at your option) any later version.
+     
+     KeyboardCompositor is distributed in the hope that it will be useful,
+     but WITHOUT ANY WARRANTY; without even the implied warranty of
+     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+     GNU General Public License for more details.
+     
+     You should have received a copy of the GNU General Public License
+     along with KeyboardCompositor. If not, see <http://www.gnu.org/licenses/>
+-->
+
+<html>
+    <head>
+        <title>Keyboard Compositor test page</title>
+        <meta charset="utf-8" />
+        <style type="text/css">
+            textarea {
+                width: 500px;
+                height: 100px;
+            }
+        </style>
+    </head>
+    <body>
+        <p> Type a very, very, very long test... <input id="inlineTextInput" type="text" /></p>
+        <textarea id="inlineTextArea" style="display: inline"></textarea>
+        <textarea id="blockTextArea" style="display: block"></textarea>
+        <textarea id="inlineBlockTextArea"style="display: inline-block"></textarea>
+        <script type="text/javascript">
+            function logEvents(element) {
+                element.addEventListener('keydown', function(e) {
+                    console.log('KeyDown[' + element.getAttribute('kc-lang') + ']', e);
+                });
+                element.addEventListener('keyup', function(e) {
+                    console.log('KeyUp[' + element.getAttribute('kc-lang') + ']', e);
+                });
+                element.addEventListener('keypress', function(e) {
+                    console.log('KeyPress[' + element.getAttribute('kc-lang') + ']', e);
+                });
+                element.addEventListener('focus', function(e) {
+                    console.log('Focus[' + element.getAttribute('kc-lang') + ']', e);
+                });
+                element.addEventListener('blur', function(e) {
+                    console.log('Blur[' + element.getAttribute('kc-lang') + ']', e);
+                });
+            }
+
+            for (textArea of document.getElementsByTagName('textarea'))
+                logEvents(textArea);
+            for (input of document.getElementsByTagName('input'))
+                if (input.getAttribute('type') == 'text')
+                    logEvents(input);
+        </script>
+    </body>
+</html>

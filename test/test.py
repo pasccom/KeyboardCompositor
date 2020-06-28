@@ -28,7 +28,7 @@ import unittest
 class ImageMagick:
     programs = {
         'crop':    'convert',
-        'compare': 'compare'
+        'compare': 'compare',
     }
 
     @classmethod
@@ -52,6 +52,22 @@ class ImageMagick:
         except (ValueError):
             print(imCompare.stderr)
 
+def foreachElement(fun):
+    def foreachElementFun(self, *args, **kwArgs):
+        try:
+            lang = kwArgs['lang']
+        except(KeyError):
+            lang = args[0]
+        try:
+            for elementId in [None] + self.__class__.elementIds[lang]:
+                with self.subTest(elementId=elementId):
+                    kwArgs['elementId'] = elementId
+                    fun(self, *args, **kwArgs)
+        except(KeyError):
+            fun(self, *args, **kwArgs)
+
+    return foreachElementFun
+
 class BrowserTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -73,11 +89,6 @@ class BrowserTestCase(unittest.TestCase):
         self.browser = self.__class__.browser
 
 class BaseTest(BrowserTestCase):
-
-    def setUp(self):
-        super().setUp()
-        self.loadTestPage()
-        self.browser.consoleCapture.depth = 1
 
     def assertEvent(self, event, eventType, target):
         self.assertEqual(event['type'], eventType)
@@ -107,9 +118,10 @@ class BaseTest(BrowserTestCase):
         [{'lang': "el", 'keys': k, 'letter': l} for k, l in zip("ABGDEZÈIKLMNOPRSTUXW", "ΑΒΓΔΕΖΗΙΚΛΜΝΟΠΡΣΤΥΧΩ")] +
         [{'lang': "el", 'keys': k, 'letter': l} for k, l in zip("abgdezèiklmnoprstuxw", "αβγδεζηικλμνοπρστυχω")],
     afterEach=lambda self: self.clearTextElements())
-    def testSingleKey(self, lang, keys, letter):
+    @foreachElement
+    def testSingleKey(self, lang, keys, letter, elementId=None):
+        textElement = self.getTextElement(lang, elementId)
         del self.browser.consoleCapture
-        textElement = self.getTextElement(lang)
 
         for i in range(1, 5):
             textElement.send_keys(keys)
@@ -149,9 +161,10 @@ class BaseTest(BrowserTestCase):
             "qd": "ъ", "qD": "ъ", "qs" : "ь", "qS" : "ь",                                                                   # Signs
         }).items()],
     afterEach=lambda self: self.clearTextElements())
-    def testPrefixComposition(self, lang, keys, letter):
+    @foreachElement
+    def testPrefixComposition(self, lang, keys, letter, elementId=None):
+        textElement = self.getTextElement(lang, elementId)
         del self.browser.consoleCapture
-        textElement = self.getTextElement(lang)
 
         for i in range(1, 5):
             textElement.send_keys(keys)
@@ -187,9 +200,10 @@ class BaseTest(BrowserTestCase):
         [{'lang': "el", 'keys': k, 'letter': l} for k, l in dict({"TH": "Θ", "Th": "Θ", "KC": "Ξ", "Kc": "Ξ", "PH": "Φ", "Ph": "Φ", "PC": "Ψ", "Pc": "Ψ"}).items()] +
         [{'lang': "el", 'keys': k, 'letter': l} for k, l in dict({"th": "θ", "tH": "θ", "kc": "ξ", "kC": "ξ", "ph": "φ", "pH": "φ", "pc": "ψ", "pC": "ψ"}).items()] ,
     afterEach=lambda self: self.clearTextElements())
-    def testSuffixComposition(self, lang, keys, letter):
+    @foreachElement
+    def testSuffixComposition(self, lang, keys, letter, elementId=None):
+        textElement = self.getTextElement(lang, elementId)
         del self.browser.consoleCapture
-        textElement = self.getTextElement(lang)
 
         for i in range(1, 5):
             textElement.send_keys(keys)
@@ -230,10 +244,12 @@ class BaseTest(BrowserTestCase):
         }).items()] + [
         {'lang': "ru", 'keys': k, 'letter': l} for k, l in dict({
             "shch": "щ", "shcH": "щ", "shCh": "щ", "shCH": "щ", "sHch": "щ", "sHcH": "щ", "sHCh": "щ", "sHCH": "щ",         # shcha
-        }).items()], afterEach=lambda self: self.clearTextElements())
-    def testShchaComposition(self, lang, keys, letter):
+        }).items()],
+    afterEach=lambda self: self.clearTextElements())
+    @foreachElement
+    def testShchaComposition(self, lang, keys, letter, elementId=None):
+        textElement = self.getTextElement(lang, elementId)
         del self.browser.consoleCapture
-        textElement = self.getTextElement(lang)
 
         for i in range(1, 5):
             textElement.send_keys(keys)
@@ -334,9 +350,11 @@ class BaseTest(BrowserTestCase):
         },
 
     }, afterEach=lambda self: self.clearTextElements())
-    def testAlphabet(self, lang, inputData, outputData):
+    @foreachElement
+    def testAlphabet(self, lang, inputData, outputData, elementId=None):
+        textElement = self.getTextElement(lang, elementId)
         del self.browser.consoleCapture
-        textElement = self.getTextElement(lang)
+
         l = 0
         for keys in inputData.split(' '):
             textElement.send_keys(keys)
@@ -352,10 +370,12 @@ class BaseTest(BrowserTestCase):
             l = l + 1
             self.assertEqual(textElement.get_property('value'), outputData[0:l])
 
-    def testEnter(self):
-        lang = 'ru'
-        textElement = self.getTextElement(lang)
+    @TestData(['ru', 'el'])
+    @foreachElement
+    def testEnter(self, lang, elementId=None):
+        textElement = self.getTextElement(lang, elementId)
         del self.browser.consoleCapture
+
         textElement.send_keys(Keys.ENTER)
         capture = self.browser.consoleCapture()[1:]
 
@@ -414,15 +434,11 @@ class FlagsTest(BrowserTestCase):
         print(f"\nDSSIM for '{lang}' is: {diff} ... ", end='')
         self.assertLessEqual(diff, 0.1)
 
-    def setUp(self):
-        super().setUp()
-        self.loadTestPage()
-        self.browser.consoleCapture.depth = 1
-
     @TestData(['ru', 'el'])
+    @foreachElement
     @unittest.skipUnless(ImageMagick.checkImageMagick(), 'This test requires ImageMagick')
-    def testFlag(self, lang):
-        self.checkFlag(self.getTextElement(lang), lang)
+    def testFlag(self, lang, elementId=None):
+        self.checkFlag(self.getTextElement(lang, elementId), lang)
 
 class MessagesTest(BrowserTestCase):
     @classmethod
@@ -430,10 +446,7 @@ class MessagesTest(BrowserTestCase):
         super().setUpClass()
         print(cls.browser.install_addon(os.path.join(cls.testDir, 'dist', 'kc_test.xpi'), False))
 
-    def loadTestPage(self):
-        pass
-
-    @TestData(['en', 'fr', 'de', 'ru', 'el'], beforeEach=loadTestPage)
+    @TestData(['en', 'fr', 'de', 'ru', 'el'])
     def testGetLang(self, lang):
         element = self.getTextElement(lang)
         ans = self.browser.execute_async_script("kcTest.sendMessage({command: 'GET_LANG'}, arguments[0]).then(arguments[arguments.length - 1]);", element)
@@ -450,7 +463,7 @@ class MessagesTest(BrowserTestCase):
         {'lang': 'de', 'kcLang': 'el'},
         {'lang': 'ru', 'kcLang': 'el'},
         {'lang': 'el', 'kcLang': 'el'},
-    ], beforeEach=loadTestPage)
+    ])
     def testSetLang(self, lang, kcLang):
         element = self.getTextElement(lang)
 
@@ -470,9 +483,6 @@ class DynamicFlagsTest(FlagsTest, MessagesTest):
     def setUp(self):
         super(FlagsTest, self).setUp()
 
-    def loadTestPage(self):
-        pass
-
     @TestData([
         {'lang': 'en', 'kcLang': 'ru'},
         {'lang': 'fr', 'kcLang': 'ru'},
@@ -484,7 +494,7 @@ class DynamicFlagsTest(FlagsTest, MessagesTest):
         {'lang': 'de', 'kcLang': 'el'},
         {'lang': 'ru', 'kcLang': 'el'},
         {'lang': 'el', 'kcLang': 'el'},
-    ], beforeEach=loadTestPage)
+    ])
     @unittest.skipUnless(ImageMagick.checkImageMagick(), 'This test requires ImageMagick')
     def testFlagSetLang(self, lang, kcLang):
         element = self.getTextElement(lang)
@@ -504,22 +514,50 @@ class DynamicFlagsTest(FlagsTest, MessagesTest):
         self.checkFlag(element, lang)
 
 class TextAreaTest(BaseTest, DynamicFlagsTest):
-    def loadTestPage(self):
-        self.browser.get(os.path.join('file://' + self.__class__.testDir, 'test_mapping.html'))
+    elementIds = {
+        'ru': ['inlineTextArea', 'blockTextArea', 'inlineBlockTextArea'],
+        'el': ['inlineTextArea', 'blockTextArea', 'inlineBlockTextArea'],
+    }
 
-    def getTextElement(self, lang):
-        return self.browser.find_element_by_css_selector(f'textarea[lang="{lang}"]')
+    def getTextElement(self, lang, elementId=None):
+        if elementId is None:
+            self.browser.get(os.path.join('file://' + self.__class__.testDir, 'test_mapping.html'))
+            element = self.browser.find_element_by_css_selector(f'textarea[lang="{lang}"]')
+        else:
+            self.browser.get(os.path.join('file://' + self.__class__.testDir, 'test_dynamic.html'))
+            element = self.browser.find_element_by_id(elementId)
+            if lang is not None:
+                self.browser.execute_script(f"kcTest.sendMessage({{command: 'SET_LANG', lang: '{lang}'}}, arguments[0]).then(arguments[arguments.length - 1]);", element)
+                ans = self.browser.execute_async_script("kcTest.sendMessage({command: 'GET_LANG'}, arguments[0]).then(arguments[arguments.length - 1]);", element)
+                self.assertEqual(ans, [None, lang])
+
+        self.browser.consoleCapture.depth = 1
+        return element
 
     def clearTextElements(self):
         for textArea in self.browser.find_elements_by_tag_name('textarea'):
             textArea.clear()
 
 class TextInputTest(BaseTest, DynamicFlagsTest):
-    def loadTestPage(self):
-        self.browser.get(os.path.join('file://' + self.__class__.testDir, 'test_mapping.html'))
+    elementIds = {
+        'ru': ['inlineTextInput'],
+        'el': ['inlineTextInput'],
+    }
 
-    def getTextElement(self, lang):
-        return self.browser.find_element_by_css_selector(f'input[type="text"][lang="{lang}"]')
+    def getTextElement(self, lang, elementId=None):
+        if elementId is None:
+            self.browser.get(os.path.join('file://' + self.__class__.testDir, 'test_mapping.html'))
+            element = self.browser.find_element_by_css_selector(f'input[type="text"][lang="{lang}"]')
+        else:
+            self.browser.get(os.path.join('file://' + self.__class__.testDir, 'test_dynamic.html'))
+            element = self.browser.find_element_by_id(elementId)
+            if lang is not None:
+                self.browser.execute_script(f"kcTest.sendMessage({{command: 'SET_LANG', lang: '{lang}'}}, arguments[0]).then(arguments[arguments.length - 1]);", element)
+                ans = self.browser.execute_async_script("kcTest.sendMessage({command: 'GET_LANG'}, arguments[0]).then(arguments[arguments.length - 1]);", element)
+                self.assertEqual(ans, [None, lang])
+
+        self.browser.consoleCapture.depth = 1
+        return element
 
     def clearTextElements(self):
         for textInput in self.browser.find_elements_by_css_selector('input[type="text"]'):
