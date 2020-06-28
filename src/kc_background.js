@@ -1,5 +1,3 @@
-console.log("Coucou from background!");
-
 function menuItemClicked(frameId, targetElementId, mapping)
 {
     console.log("Clicked[" + mapping + "]: ", targetElementId);
@@ -90,6 +88,14 @@ function installMappings(list) {
                 });
             });
         });
+    });
+
+    browser.runtime.onMessageExternal.addListener((message, sender, sendResponse) => {
+        console.log("Got external message:", message);
+        return browser.tabs.query({
+            active: true,
+            currentWindow: true,
+        }).then((tabs) => browser.tabs.sendMessage(tabs[0].id, message));
     });
 }
 

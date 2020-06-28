@@ -105,3 +105,31 @@ if [ -z "$ANS" ]; then
     wget "https://github.com/pasccom/ConsoleCapture/releases/download/$CC_VERSION/console_capture.xpi"
     mv console_capture.xpi "$SCRIPT_DIR"
 fi
+
+# Update KC-test:
+ANS=
+if [ -f "$SCRIPT_DIR/dist/kc_test.xpi" ]; then
+    echo "File $SCRIPT_DIR/dist/kc_test.xpi already exists. Do you want to update it (y/N)?"
+    while true; do
+        read ANS
+        if [ -z "$ANS" -o "$ANS" == 'n' -o "$ANS" == 'N' ]; then
+            echo "OK, skipping"
+            ANS='skip'
+            break
+        fi
+        if [ "$ANS" == 'y' -o "$ANS" == 'Y' ]; then
+            rm -R "$SCRIPT_DIR/env"
+            ANS=
+            break
+        fi
+    done
+fi
+
+# Build KC-test:
+if [ -z "$ANS" ]; then
+    pushd "$SCRIPT_DIR/src"
+    zip -r -FS ../dist/kc_test.xpi \
+        manifest.json              \
+        kc_test_content_script.js
+    popd
+fi

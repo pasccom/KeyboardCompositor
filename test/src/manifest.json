@@ -1,0 +1,19 @@
+{
+    "manifest_version": 2,
+
+    "name":         "Keyboard Compositor Test",
+    "description":  "Send messages to Keyboard Compositor",
+    "version":      "0.1",
+    "applications": {
+        "gecko": {
+            "id":   "kc_test@pas.com"
+        }
+    },
+
+    "content_scripts": [
+        {
+            "matches": ["<all_urls>"],
+            "js": ["kc_test_content_script.js"]
+        }
+    ]
+}
