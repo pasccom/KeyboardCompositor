@@ -3,7 +3,7 @@
 
     "name":         "Keyboard Compositor",
     "description":  "Type in any language using advanced composition",
-    "version":      "0.1",
+    "version":      "0.2",
     "applications": {
         "gecko": {
             "id":   "keyboard_compositor@pas.com"

@@ -18,9 +18,11 @@ set to the right language.
 FEATURES
 --------
 
-Here is the list of the current features (included in version 0.1)
+Here is the list of the current features (included in version 0.2)
 - Phonetic mapping of Russian Cyrillic alphabet into latin on the text fields with
 the `lang` attribute
+- Allow the user to activate the extension on text fields without the `lang` attribute
+(or with other `lang` attribute).
 
 Ideas I have to extend the functionalities of the page are listed
 [below](#future-developments)
@@ -29,8 +31,6 @@ FUTURE DEVELOPMENTS
 -------------------
 
 Here is the list of ideas I would like to implement
-- Allow the user to activate the extension on text fields without the `lang` attribute
-(or with other `lang` attribute).
 - Allow the user to configure the mapping for a given language.
 
 If you have any other feature you will be interested in, please let me know.
