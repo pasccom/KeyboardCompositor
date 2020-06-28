@@ -71,10 +71,14 @@ class BrowserTestCase(unittest.TestCase):
 
     def setUp(self):
         self.browser = self.__class__.browser
-        self.browser.get(os.path.join('file://' + self.__class__.testDir, 'test.html'))
-        self.browser.consoleCapture.depth = 1
 
 class BaseTest(BrowserTestCase):
+
+    def setUp(self):
+        super().setUp()
+        self.browser.get(os.path.join('file://' + self.__class__.testDir, 'test_mapping.html'))
+        self.browser.consoleCapture.depth = 1
+
     def assertEvent(self, event, eventType, target):
         self.assertEqual(event['type'], eventType)
         self.assertEqual(event['target'], target)
@@ -403,7 +407,7 @@ class FlagsTest(BrowserTestCase):
                                    os.path.join(self.__class__.testOutput, f"testFlag_{lang}.png"),
                                    os.path.join(self.__class__.testOutput, f"testFlag_{lang}_diff.png"))
         self.assertIsNot(diff, None)
-        print(f"DSSIM for '{lang}' is: {diff}")
+        print(f"\nDSSIM for '{lang}' is: {diff} ... ", end='')
         self.assertLessEqual(diff, 0.1)
 
 class TextAreaTest(BaseTest, FlagsTest):
