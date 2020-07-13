@@ -568,3 +568,31 @@ class TextInputTest(BaseTest, DynamicFlagsTest):
     def clearTextElements(self):
         for textInput in self.browser.find_elements_by_css_selector('input[type="text"]'):
             textInput.clear()
+
+class ContentEditableTest(BaseTest, DynamicFlagsTest):
+    elementIds = {
+        'ru': ['blockEditableDiv', 'inlineBlockEditableDiv'],
+        'el': ['blockEditableDiv', 'inlineBlockEditableDiv'],
+    }
+
+    def getTextElement(self, lang, elementId=None):
+        if elementId is None:
+            self.browser.get(os.path.join('file://' + self.__class__.testDir, 'test_mapping.html'))
+            element = self.browser.find_element_by_css_selector(f'div[contentEditable="true"][lang="{lang}"]')
+        else:
+            self.browser.get(os.path.join('file://' + self.__class__.testDir, 'test_dynamic.html'))
+            element = self.browser.find_element_by_id(elementId)
+            if lang is not None:
+                self.browser.execute_script(f"kcTest.sendMessage({{command: 'SET_LANG', lang: '{lang}'}}, arguments[0]).then(arguments[arguments.length - 1]);", element)
+                ans = self.browser.execute_async_script("kcTest.sendMessage({command: 'GET_LANG'}, arguments[0]).then(arguments[arguments.length - 1]);", element)
+                self.assertEqual(ans, [None, lang])
+
+        self.browser.consoleCapture.depth = 1
+        return element
+
+    def getValue(self, element):
+        return element.text
+
+    def clearTextElements(self):
+        for editableDiv in self.browser.find_elements_by_css_selector('div[contentEditable="true"]'):
+            editableDiv.clear()
