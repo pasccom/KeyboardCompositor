@@ -23,22 +23,38 @@
         <meta charset="utf-8" />
         <style type="text/css">
             textarea {
+                display: inline-block;
                 width: 500px;
                 height: 100px;
+                margin: 1px;
+                vertical-align: top;
+            }
+            div {
+                display: inline-block;
+                width: 500px;
+                height: 100px;
+                border: 1px solid black;
+                margin: 1px;
+                vertical-align: top;
             }
         </style>
     </head>
     <body>
         <p> Type in English <input type="text" lang="en" /></p>
         <textarea lang="en"></textarea>
+        <div contentEditable="true" lang="en"></div>
         <p> Type in French <input type="text" lang="fr" /></p>
         <textarea lang="fr"></textarea>
+        <div contentEditable="true" lang="fr"></div>
         <p> Type in German <input type="text" lang="de" /></p>
         <textarea lang="de"></textarea>
+        <div contentEditable="true" lang="de"></div>
         <p> Type in Russian <input type="text" lang="ru" /></p>
         <textarea lang="ru"></textarea>
+        <div contentEditable="true" lang="ru"></div>
         <p> Type in Greek <input type="text" lang="el" /></p>
         <textarea lang="el"></textarea>
+        <div contentEditable="true" lang="el"></div>
         <script type="text/javascript">
             function logEvents(element) {
                 element.addEventListener('keydown', function(e) {
@@ -63,6 +79,9 @@
             for (input of document.getElementsByTagName('input'))
                 if (input.getAttribute('type') == 'text')
                     logEvents(input);
+             for (div of document.getElementsByTagName('div'))
+                if (div.isContentEditable)
+                    logEvents(div);
         </script>
     </body>
 </html>
