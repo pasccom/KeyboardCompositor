@@ -309,6 +309,17 @@
                 }
             });
         }
+
+        // Search editable elements
+        for (const editable of element.querySelectorAll('[contentEditable="true"]')) {
+            list.forEach((mapping) => {
+                if (editable.getAttribute('lang') == mapping.code) {
+                    loadMapping(mapping.code);
+                    keyMapper.install(editable);
+                    addLanguageIcon(editable, mapping);
+                }
+            });
+        }
     }
 
     /*!
