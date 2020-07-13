@@ -22,7 +22,18 @@
     var mappings = {}; // Mapping cache
 
     var keyMapper = {
-        shimTarget: function(e) {
+        /*!
+         * \brief Wraps the event target
+         *
+         * This function adds a shim to ensure all the required event target properties are available.
+         * The required event target properties are:
+         * \li \c value
+         * \li \c selectionStart
+         * \li \c selectionEnd
+         *
+         * \param e The event to handle.
+         */
+        wrapEventTarget: function(e) {
             if (e.target.selectionStart === undefined)
                 Object.defineProperty(e.target, 'selectionStart', {
                     get: () => {
@@ -83,11 +94,37 @@
                         }
                     },
                 });
+            return e;
         },
+
+        /*!
+         * \brief Keyboard event handler
+         *
+         * This function is the event listener entry point.
+         * It filters out event with modifiers set and routes the other events to the handler functions.
+         * \param e The event to handle.
+         */
+        handleEvent: function(e) {
+            // Do nothing if one of these modifiers is pressed:
+            if (e.altKey || e.ctrlKey || e.metaKey)
+                return;
+            if (e.type == 'keydown')
+                this.onKeyDown(this.wrapEventTarget(e));
+            if (e.type == 'keyup')
+                this.onKeyUp(this.wrapEventTarget(e));
+        },
+
+        /*!
+         * \brief Key down event handler
+         *
+         * This function shoud be called whenever a key is pressed.
+         * It unfocuses and focuses the element when the \c Enter key is pressed.
+         * This is required for some websites to work.
+         * \param e The event to handle.
+         */
         onKeyDown: function(e) {
             if (e.key != 'Enter')
                 return;
-            keyMapper.shimTarget(e);
 
             var posStart = e.target.selectionStart;
             var posEnd = e.target.selectionEnd;
@@ -96,11 +133,15 @@
             e.target.selectionStart = posStart;
             e.target.selectionEnd = posEnd;
         },
+
+        /*!
+         * \brief Key up event handler
+         *
+         * This function shoud be called whenever a key is released.
+         * It applies the mappings. This is thus the core of the extension.
+         * \param e The event to handle.
+         */
         onKeyUp: function(e) {
-            // Do nothing if one of these modifiers is pressed:
-            if (e.altKey || e.ctrlKey || e.metaKey)
-                return;
-            keyMapper.shimTarget(e);
             // Get mapping:
             var mapping = e.target.getAttribute('kc-lang');
             if (!mapping)
@@ -166,37 +207,37 @@
                 e.target.dispatchEvent(new KeyboardEvent('keyup', keyEventInit));
             }
         },
+
+        /*!
+        * \brief Install key mapper on given element
+        *
+        * This function install the key mapper event listeners on the given element.
+        * The extension will then listen to \c keyup events and remap typed keys when needed.
+        * It will also listen to \c keydown events, as this is needed for Duolingo to work weel
+        *
+        * \param element The element on which to install the extension.
+        */
+        install: function(element) {
+            console.log("Installing on:", element);
+
+            element.addEventListener('keydown', this);
+            element.addEventListener('keyup', this, true);
+        },
+
+        /*!
+        * \brief Unnstall key mapper on given element
+        *
+        * This function uninstall the key mapper event listeners on the given element.
+        *
+        * \param element The element on which to uninstall the extension.
+        */
+        uninstall: function(element) {
+            console.log("Uninstalling on:", element);
+
+            element.removeEventListener('keydown', this);
+            element.removeEventListener('keyup', this, true);
+        },
     };
-
-    /*!
-     * \brief Install key mapper on given element
-     *
-     * This function install the key mapper event listeners on the given element.
-     * The extension will then listen to \c keyup events and remap typed keys when needed.
-     * It will also listen to \c keydown events, as this is needed for Duolingo to work weel
-     *
-     * \param element The element on which to install the extension.
-     */
-    function installKeyMapper(element) {
-        console.log("Installing on:", element);
-
-        element.addEventListener('keydown', keyMapper.onKeyDown);
-        element.addEventListener('keyup', keyMapper.onKeyUp, true);
-    }
-
-    /*!
-     * \brief Unnstall key mapper on given element
-     *
-     * This function uninstall the key mapper event listeners on the given element.
-     *
-     * \param element The element on which to install the extension.
-     */
-    function uninstallKeyMapper(element) {
-        console.log("Uninstalling on:", element);
-
-        element.removeEventListener('keydown', keyMapper.onKeyDown);
-        element.removeEventListener('keyup', keyMapper.onKeyUp, true);
-    }
 
     function addLanguageIcon(element, mapping) {
         var icon = document.createElement('IMG');
@@ -252,7 +293,7 @@
             list.forEach((mapping) => {
                 if (textArea.getAttribute('lang') == mapping.code) {
                     loadMapping(mapping.code);
-                    installKeyMapper(textArea);
+                    keyMapper.install(textArea);
                     addLanguageIcon(textArea, mapping);
                 }
             });
@@ -263,7 +304,7 @@
             list.forEach((mapping) => {
                 if ((input.getAttribute('type') == 'text') && (input.getAttribute('lang') == mapping.code)) {
                     loadMapping(mapping.code);
-                    installKeyMapper(input);
+                    keyMapper.install(input);
                     addLanguageIcon(input, mapping);
                 }
             });
@@ -335,12 +376,12 @@
                 element.setAttribute('kc-lang', message.lang);
                 addLanguageIcon(element, list.find((e) => (e.code == element.getAttribute('kc-lang'))));
                 if (!oldKCLang && !list.find((e) => (e.code == element.getAttribute('lang'))))
-                    installKeyMapper(element);
+                    keyMapper.install(element);
             } else if (message.command == "REMOVE_LANG") {
                 removeLanguageIcon(element);
                 element.removeAttribute('kc-lang');
                 if (oldKCLang && !list.find((e) => (e.code == element.getAttribute('lang'))))
-                    uninstallKeyMapper(element);
+                    keyMapper.uninstall(element);
                 else if (oldKCLang)
                     addLanguageIcon(element, list.find((e) => (e.code == element.getAttribute('lang'))));
             }
