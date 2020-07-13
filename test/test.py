@@ -125,7 +125,7 @@ class BaseTest(BrowserTestCase):
 
         for i in range(1, 5):
             textElement.send_keys(keys)
-            self.assertEqual(textElement.get_property('value'), letter * i)
+            self.assertEqual(self.getValue(textElement), letter * i)
 
         capture = [record for record in self.browser.consoleCapture() if record['arguments'][0].startswith('Key')]
         numEvents = 3 if (keys == letter) else 8
@@ -168,7 +168,7 @@ class BaseTest(BrowserTestCase):
 
         for i in range(1, 5):
             textElement.send_keys(keys)
-            self.assertEqual(textElement.get_property('value'), letter * i)
+            self.assertEqual(self.getValue(textElement), letter * i)
 
         capture = [record for record in self.browser.consoleCapture() if record['arguments'][0].startswith('Key')]
         numEvents = 5 * len(keys) + 3
@@ -207,7 +207,7 @@ class BaseTest(BrowserTestCase):
 
         for i in range(1, 5):
             textElement.send_keys(keys)
-            self.assertEqual(textElement.get_property('value'), letter * i)
+            self.assertEqual(self.getValue(textElement), letter * i)
 
         capture = [record for record in self.browser.consoleCapture() if record['arguments'][0].startswith('Key')]
         numEvents = 11 + 2 * len(keys) + 3
@@ -253,7 +253,7 @@ class BaseTest(BrowserTestCase):
 
         for i in range(1, 5):
             textElement.send_keys(keys)
-            self.assertEqual(textElement.get_property('value'), letter * i)
+            self.assertEqual(self.getValue(textElement), letter * i)
 
         capture = [record for record in self.browser.consoleCapture() if record['arguments'][0].startswith('Key')]
         numEvents = 33
@@ -368,7 +368,7 @@ class BaseTest(BrowserTestCase):
             self.assertKeyEvent(capture[-1]['arguments'][1], 'keyup', outputData[l])
 
             l = l + 1
-            self.assertEqual(textElement.get_property('value'), outputData[0:l])
+            self.assertEqual(self.getValue(textElement), outputData[0:l])
 
     @TestData(['ru', 'el'])
     @foreachElement
@@ -534,6 +534,9 @@ class TextAreaTest(BaseTest, DynamicFlagsTest):
         self.browser.consoleCapture.depth = 1
         return element
 
+    def getValue(self, element):
+        return element.get_property('value')
+
     def clearTextElements(self):
         for textArea in self.browser.find_elements_by_tag_name('textarea'):
             textArea.clear()
@@ -558,6 +561,9 @@ class TextInputTest(BaseTest, DynamicFlagsTest):
 
         self.browser.consoleCapture.depth = 1
         return element
+
+    def getValue(self, element):
+        return element.get_property('value')
 
     def clearTextElements(self):
         for textInput in self.browser.find_elements_by_css_selector('input[type="text"]'):
