@@ -22,20 +22,85 @@
     var mappings = {}; // Mapping cache
 
     var keyMapper = {
+        shimTarget: function(e) {
+            if (e.target.selectionStart === undefined)
+                Object.defineProperty(e.target, 'selectionStart', {
+                    get: () => {
+                        var selection = window.getSelection();
+                        if (selection.rangeCount == 1) {
+                            var range = selection.getRangeAt(0);
+                            if (range.startContainer == range.endContainer)
+                                return range.startOffset;
+                        }
+                        return undefined;
+                    },
+                    set: (start) => {
+                        var selection = window.getSelection();
+                        if (selection.rangeCount == 1) {
+                            var range = selection.getRangeAt(0);
+                            if (range.startContainer == range.endContainer)
+                                selection.collapse(range.commonAncestorContainer, start);
+                        }
+                    },
+                });
+            if (e.target.selectionEnd === undefined)
+                Object.defineProperty(e.target, 'selectionEnd', {
+                    get: () => {
+                        var selection = window.getSelection();
+                        if (selection.rangeCount == 1) {
+                            var range = selection.getRangeAt(0);
+                            if (range.startContainer == range.endContainer)
+                                return range.endOffset;
+                        }
+                        return undefined;
+                    },
+                    set: (end) => {
+                        var selection = window.getSelection();
+                        if (selection.rangeCount == 1) {
+                            var range = selection.getRangeAt(0);
+                            if (range.startContainer == range.endContainer)
+                                selection.collapse(range.commonAncestorContainer, end);
+                        }
+                    },
+                });
+            if (e.target.value === undefined)
+                Object.defineProperty(e.target, 'value', {
+                    get: () => {
+                        var selection = window.getSelection();
+                        if (selection.rangeCount == 1) {
+                            var range = selection.getRangeAt(0);
+                            if (range.startContainer == range.endContainer)
+                                return range.commonAncestorContainer.textContent;
+                        }
+                        return undefined;
+                    },
+                    set: (value) => {
+                        var selection = window.getSelection();
+                        if (selection.rangeCount == 1) {
+                            var range = selection.getRangeAt(0);
+                            if (range.startContainer == range.endContainer)
+                                range.commonAncestorContainer.textContent = value;
+                        }
+                    },
+                });
+        },
         onKeyDown: function(e) {
-            if (e.key == 'Enter') {
-                var posStart = e.target.selectionStart;
-                var posEnd = e.target.selectionEnd;
-                e.target.blur();
-                e.target.focus();
-                e.target.selectionStart = posStart;
-                e.target.selectionEnd = posEnd;
-            }
+            if (e.key != 'Enter')
+                return;
+            keyMapper.shimTarget(e);
+
+            var posStart = e.target.selectionStart;
+            var posEnd = e.target.selectionEnd;
+            e.target.blur();
+            e.target.focus();
+            e.target.selectionStart = posStart;
+            e.target.selectionEnd = posEnd;
         },
         onKeyUp: function(e) {
             // Do nothing if one of these modifiers is pressed:
             if (e.altKey || e.ctrlKey || e.metaKey)
                 return;
+            keyMapper.shimTarget(e);
             // Get mapping:
             var mapping = e.target.getAttribute('kc-lang');
             if (!mapping)
@@ -53,7 +118,7 @@
             // Check that nothing is selected:
             var posStart = e.target.selectionStart;
             var posEnd = e.target.selectionEnd;
-            if (posStart != posEnd)
+            if ((posStart === undefined) || (posEnd === undefined) || (posStart != posEnd))
                 return;
             // Apply mapping:
             var t = e.target.value;
@@ -252,8 +317,12 @@
 
         browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
             var element = message.elementId ? browser.menus.getTargetElement(message.elementId) : document.activeElement;
+
+            while (element && element.isContentEditable && (element.contentEditable != 'true'))
+                element = element.parentElement;
             if (!element)
                 return;
+
             var oldKCLang = element.getAttribute('kc-lang');
 
             if (message.command == "GET_LANG") {
