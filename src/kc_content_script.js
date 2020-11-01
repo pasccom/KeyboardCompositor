@@ -355,7 +355,12 @@
         // Search for text fields in every new node using a MutationObserver
         var bodyObserver = new MutationObserver(function(mutationRecords) {
             for (const record of mutationRecords) {
-                record.addedNodes.forEach((element) => {searchTextFields(element, list);});
+                record.addedNodes.forEach((node) => {
+                    if ((node.nodeType == Node.ELEMENT_NODE)
+                     || (node.nodeType == Node.DOCUMENT_NODE)
+                     || (node.nodeType == Node.DOCUMENT_FRAGMENT_NODE))
+                        searchTextFields(node, list);
+                });
             }
         });
 
