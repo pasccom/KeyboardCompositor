@@ -18,6 +18,7 @@
 from selenium import webdriver
 from selenium.common import exceptions as selenium
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.by import By
 from .PythonUtils.testdata import TestData
 from .ConsoleCapture import captureConsole
 
@@ -519,10 +520,10 @@ class TextAreaTest(BaseTest, DynamicFlagsTest):
     def getTextElement(self, lang, elementId=None):
         if elementId is None:
             self.browser.get(os.path.join('file://' + self.__class__.testDir, 'test_mapping.html'))
-            element = self.browser.find_element_by_css_selector(f'textarea[lang="{lang}"]')
+            element = self.browser.find_element(By.CSS_SELECTOR, f'textarea[lang="{lang}"]')
         else:
             self.browser.get(os.path.join('file://' + self.__class__.testDir, 'test_dynamic.html'))
-            element = self.browser.find_element_by_id(elementId)
+            element = self.browser.find_element(By.ID, elementId)
             if lang is not None:
                 self.browser.execute_script(f"kcTest.sendMessage({{command: 'SET_LANG', lang: '{lang}'}}, arguments[0]).then(arguments[arguments.length - 1]);", element)
                 ans = self.browser.execute_async_script("kcTest.sendMessage({command: 'GET_LANG'}, arguments[0]).then(arguments[arguments.length - 1]);", element)
@@ -535,7 +536,7 @@ class TextAreaTest(BaseTest, DynamicFlagsTest):
         return element.get_property('value')
 
     def clearTextElements(self):
-        for textArea in self.browser.find_elements_by_tag_name('textarea'):
+        for textArea in self.browser.find_elements(By.TAG_NAME, 'textarea'):
             textArea.clear()
 
 class TextInputTest(BaseTest, DynamicFlagsTest):
@@ -547,10 +548,10 @@ class TextInputTest(BaseTest, DynamicFlagsTest):
     def getTextElement(self, lang, elementId=None):
         if elementId is None:
             self.browser.get(os.path.join('file://' + self.__class__.testDir, 'test_mapping.html'))
-            element = self.browser.find_element_by_css_selector(f'input[type="text"][lang="{lang}"]')
+            element = self.browser.find_element(By.CSS_SELECTOR, f'input[type="text"][lang="{lang}"]')
         else:
             self.browser.get(os.path.join('file://' + self.__class__.testDir, 'test_dynamic.html'))
-            element = self.browser.find_element_by_id(elementId)
+            element = self.browser.find_element(By.ID, elementId)
             if lang is not None:
                 self.browser.execute_script(f"kcTest.sendMessage({{command: 'SET_LANG', lang: '{lang}'}}, arguments[0]).then(arguments[arguments.length - 1]);", element)
                 ans = self.browser.execute_async_script("kcTest.sendMessage({command: 'GET_LANG'}, arguments[0]).then(arguments[arguments.length - 1]);", element)
@@ -563,7 +564,7 @@ class TextInputTest(BaseTest, DynamicFlagsTest):
         return element.get_property('value')
 
     def clearTextElements(self):
-        for textInput in self.browser.find_elements_by_css_selector('input[type="text"]'):
+        for textInput in self.browser.find_elements(By.CSS_SELECTOR, 'input[type="text"]'):
             textInput.clear()
 
 class ContentEditableTest(BaseTest, DynamicFlagsTest):
@@ -575,10 +576,10 @@ class ContentEditableTest(BaseTest, DynamicFlagsTest):
     def getTextElement(self, lang, elementId=None):
         if elementId is None:
             self.browser.get(os.path.join('file://' + self.__class__.testDir, 'test_mapping.html'))
-            element = self.browser.find_element_by_css_selector(f'div[contentEditable="true"][lang="{lang}"]')
+            element = self.browser.find_element(By.CSS_SELECTOR, f'div[contentEditable="true"][lang="{lang}"]')
         else:
             self.browser.get(os.path.join('file://' + self.__class__.testDir, 'test_dynamic.html'))
-            element = self.browser.find_element_by_id(elementId)
+            element = self.browser.find_element(By.ID, elementId)
             if lang is not None:
                 self.browser.execute_script(f"kcTest.sendMessage({{command: 'SET_LANG', lang: '{lang}'}}, arguments[0]).then(arguments[arguments.length - 1]);", element)
                 ans = self.browser.execute_async_script("kcTest.sendMessage({command: 'GET_LANG'}, arguments[0]).then(arguments[arguments.length - 1]);", element)
@@ -591,5 +592,5 @@ class ContentEditableTest(BaseTest, DynamicFlagsTest):
         return element.text
 
     def clearTextElements(self):
-        for editableDiv in self.browser.find_elements_by_css_selector('div[contentEditable="true"]'):
+        for editableDiv in self.browser.find_elements(By.CSS_SELECTOR, 'div[contentEditable="true"]'):
             editableDiv.clear()
