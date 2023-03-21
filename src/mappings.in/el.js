@@ -38,6 +38,8 @@
     "πH": "φ",
     "τh": "θ",
     "τH": "θ",
+    "σc": "ς",
+    "σC": "ς",
     // Accented letters:
     "è": "η",
     // Upper case letters:

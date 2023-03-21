@@ -196,7 +196,7 @@ class BaseTest(BrowserTestCase):
         [{'lang': "ru", 'keys': k, 'letter': l} for k, l in dict({"TS": "Ц", "Ts": "Ц", "CH": "Ч", "Ch": "Ч"}).items()] +
         [{'lang': "ru", 'keys': k, 'letter': l} for k, l in dict({"ts": "ц", "tS": "ц", "ch": "ч", "cH": "ч"}).items()] +
         [{'lang': "el", 'keys': k, 'letter': l} for k, l in dict({"TH": "Θ", "Th": "Θ", "KC": "Ξ", "Kc": "Ξ", "PH": "Φ", "Ph": "Φ", "PC": "Ψ", "Pc": "Ψ"}).items()] +
-        [{'lang': "el", 'keys': k, 'letter': l} for k, l in dict({"th": "θ", "tH": "θ", "kc": "ξ", "kC": "ξ", "ph": "φ", "pH": "φ", "pc": "ψ", "pC": "ψ"}).items()] ,
+        [{'lang': "el", 'keys': k, 'letter': l} for k, l in dict({"th": "θ", "tH": "θ", "kc": "ξ", "kC": "ξ", "ph": "φ", "pH": "φ", "pc": "ψ", "pC": "ψ", "sc": "ς", "sC": "ς"}).items()] ,
     afterEach=lambda self: self.clearTextElements())
     @foreachElement
     def testSuffixComposition(self, lang, keys, letter, elementId=None):
@@ -343,8 +343,8 @@ class BaseTest(BrowserTestCase):
         },
         "Greek (lower)": {
             'lang': "el",
-            'inputData': "a b g d e z è th i k l m n kc o p r s t u ph x pc w",
-            'outputData': "αβγδεζηθικλμνξοπρστυφχψω"
+            'inputData': "a b g d e z è th i k l m n kc o p r s sc t u ph x pc w",
+            'outputData': "αβγδεζηθικλμνξοπρσςτυφχψω"
         },
 
     }, afterEach=lambda self: self.clearTextElements())
