@@ -74,12 +74,9 @@ class BrowserTestCase(unittest.TestCase):
         cls.testDir = os.path.dirname(os.path.abspath(__file__))
         cls.baseDir = os.path.dirname(cls.testDir)
 
-        profile = webdriver.FirefoxProfile()
-        profile.set_preference('xpinstall.signatures.required', False)
-
-        cls.browser = webdriver.Firefox(profile)
+        cls.browser = webdriver.Firefox()
         captureConsole(cls.browser, os.path.join(cls.testDir, 'console_capture.xpi'))
-        print(cls.browser.install_addon(os.path.join(cls.baseDir, 'dist', 'keyboard_compositor.xpi'), False))
+        print(cls.browser.install_addon(os.path.join(cls.baseDir, 'dist', 'keyboard_compositor.xpi'), True))
 
     @classmethod
     def tearDownClass(cls):
@@ -444,7 +441,7 @@ class MessagesTest(BrowserTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        print(cls.browser.install_addon(os.path.join(cls.testDir, 'dist', 'kc_test.xpi'), False))
+        print(cls.browser.install_addon(os.path.join(cls.testDir, 'dist', 'kc_test.xpi'), True))
 
     @TestData(['en', 'fr', 'de', 'ru', 'el'])
     def testGetLang(self, lang):
