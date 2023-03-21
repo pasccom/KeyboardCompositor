@@ -94,6 +94,14 @@ class BaseTest(BrowserTestCase):
         self.assertEqual(event['originalTarget'], target)
         self.assertEqual(event['explicitOriginalTarget'], target)
 
+    def assertInputEvent(self, inputEvent, eventType, data):
+        self.assertEqual(inputEvent['type'], eventType)
+        if (data == 'Backspace'):
+            self.assertEqual(inputEvent['inputType'], 'deleteContentBackward')
+        else:
+            self.assertEqual(inputEvent['data'], data)
+            self.assertEqual(inputEvent['inputType'], 'insertText')
+
     def assertKeyEvent(self, keyEvent, eventType, key, **kwArgs):
         self.assertEqual(keyEvent['type'], eventType)
         self.assertEqual(keyEvent['key'], key)
@@ -125,27 +133,33 @@ class BaseTest(BrowserTestCase):
             textElement.send_keys(keys)
             self.assertEqual(self.getValue(textElement), letter * i)
 
-        capture = [record for record in self.browser.consoleCapture() if record['arguments'][0].startswith('Key')]
-        numEvents = 3 if (keys == letter) else 8
+        capture = [record for record in self.browser.consoleCapture() if record['arguments'][0].startswith('Event')]
+        numEvents = 4 if (keys == letter) else 11
         self.assertEqual(len(capture), 4*numEvents)
         for i in range(0, 4):
-            self.assertEqual(capture[i*numEvents]['arguments'][0], f'KeyDown[{lang}]')
+            self.assertEqual(capture[i*numEvents]['arguments'][0], f'Event[{lang}]')
             self.assertKeyEvent(capture[i*numEvents]['arguments'][1], 'keydown', keys)
-            self.assertEqual(capture[i*numEvents + 1]['arguments'][0], f'KeyPress[{lang}]')
+            self.assertEqual(capture[i*numEvents + 1]['arguments'][0], f'Event[{lang}]')
             self.assertKeyEvent(capture[i*numEvents + 1]['arguments'][1], 'keypress', keys)
-            self.assertEqual(capture[i*numEvents + 2]['arguments'][0], f'KeyUp[{lang}]')
-            self.assertKeyEvent(capture[i*numEvents + 2]['arguments'][1], 'keyup', keys)
+            self.assertEqual(capture[i*numEvents + 2]['arguments'][0], f'Event[{lang}]')
+            self.assertInputEvent(capture[i*numEvents + 2]['arguments'][1], 'input', keys)
+            self.assertEqual(capture[i*numEvents + 3]['arguments'][0], f'Event[{lang}]')
+            self.assertKeyEvent(capture[i*numEvents + 3]['arguments'][1], 'keyup', keys)
             if (keys != letter):
-                self.assertEqual(capture[i*numEvents + 3]['arguments'][0], f'KeyDown[{lang}]')
-                self.assertKeyEvent(capture[i*numEvents + 3]['arguments'][1], 'keydown', 'Backspace')
-                self.assertEqual(capture[i*numEvents + 4]['arguments'][0], f'KeyUp[{lang}]')
-                self.assertKeyEvent(capture[i*numEvents + 4]['arguments'][1], 'keyup', 'Backspace')
-                self.assertEqual(capture[i*numEvents + 5]['arguments'][0], f'KeyDown[{lang}]')
-                self.assertKeyEvent(capture[i*numEvents + 5]['arguments'][1], 'keydown', letter)
-                self.assertEqual(capture[i*numEvents + 6]['arguments'][0], f'KeyPress[{lang}]')
-                self.assertKeyEvent(capture[i*numEvents + 6]['arguments'][1], 'keypress', letter)
-                self.assertEqual(capture[i*numEvents + 7]['arguments'][0], f'KeyUp[{lang}]')
-                self.assertKeyEvent(capture[i*numEvents + 7]['arguments'][1], 'keyup', letter)
+                self.assertEqual(capture[i*numEvents + 4]['arguments'][0], f'Event[{lang}]')
+                self.assertKeyEvent(capture[i*numEvents + 4]['arguments'][1], 'keydown', 'Backspace')
+                self.assertEqual(capture[i*numEvents + 5]['arguments'][0], f'Event[{lang}]')
+                self.assertInputEvent(capture[i*numEvents + 5]['arguments'][1], 'input', 'Backspace')
+                self.assertEqual(capture[i*numEvents + 6]['arguments'][0], f'Event[{lang}]')
+                self.assertKeyEvent(capture[i*numEvents + 6]['arguments'][1], 'keyup', 'Backspace')
+                self.assertEqual(capture[i*numEvents + 7]['arguments'][0], f'Event[{lang}]')
+                self.assertKeyEvent(capture[i*numEvents + 7]['arguments'][1], 'keydown', letter)
+                self.assertEqual(capture[i*numEvents + 8]['arguments'][0], f'Event[{lang}]')
+                self.assertKeyEvent(capture[i*numEvents + 8]['arguments'][1], 'keypress', letter)
+                self.assertEqual(capture[i*numEvents + 9]['arguments'][0], f'Event[{lang}]')
+                self.assertInputEvent(capture[i*numEvents + 9]['arguments'][1], 'input', letter)
+                self.assertEqual(capture[i*numEvents + 10]['arguments'][0], f'Event[{lang}]')
+                self.assertKeyEvent(capture[i*numEvents + 10]['arguments'][1], 'keyup', letter)
 
     @TestData([
         {'lang': "ru", 'keys': k, 'letter': l} for k, l in dict({
@@ -168,29 +182,34 @@ class BaseTest(BrowserTestCase):
             textElement.send_keys(keys)
             self.assertEqual(self.getValue(textElement), letter * i)
 
-        capture = [record for record in self.browser.consoleCapture() if record['arguments'][0].startswith('Key')]
-        numEvents = 5 * len(keys) + 3
+        capture = [record for record in self.browser.consoleCapture() if record['arguments'][0].startswith('Event')]
+        numEvents = 7 * len(keys) + 4
         self.assertEqual(len(capture), 4*numEvents)
         for i in range(0, 4):
             for j in range(0, len(keys)):
-                self.assertEqual(capture[i*numEvents + 3*j]['arguments'][0], f'KeyDown[{lang}]')
-                self.assertKeyEvent(capture[i*numEvents + 3*j]['arguments'][1], 'keydown', keys[j])
-                self.assertEqual(capture[i*numEvents + 3*j + 1]['arguments'][0], f'KeyPress[{lang}]')
-                self.assertKeyEvent(capture[i*numEvents + 3*j + 1]['arguments'][1], 'keypress', keys[j])
-                self.assertEqual(capture[i*numEvents + 3*j + 2]['arguments'][0], f'KeyUp[{lang}]')
-                self.assertKeyEvent(capture[i*numEvents + 3*j + 2]['arguments'][1], 'keyup', keys[j])
+                self.assertEqual(capture[i*numEvents + 4*j]['arguments'][0], f'Event[{lang}]')
+                self.assertKeyEvent(capture[i*numEvents + 4*j]['arguments'][1], 'keydown', keys[j])
+                self.assertEqual(capture[i*numEvents + 4*j + 1]['arguments'][0], f'Event[{lang}]')
+                self.assertKeyEvent(capture[i*numEvents + 4*j + 1]['arguments'][1], 'keypress', keys[j])
+                self.assertEqual(capture[i*numEvents + 4*j + 2]['arguments'][0], f'Event[{lang}]')
+                self.assertInputEvent(capture[i*numEvents + 4*j + 2]['arguments'][1], 'input', keys[j])
+                self.assertEqual(capture[i*numEvents + 4*j + 3]['arguments'][0], f'Event[{lang}]')
+                self.assertKeyEvent(capture[i*numEvents + 4*j + 3]['arguments'][1], 'keyup', keys[j])
             for j in range(0, len(keys)):
-                self.assertEqual(capture[i*numEvents + 3*len(keys) + 2*j]['arguments'][0], f'KeyDown[{lang}]')
-                self.assertKeyEvent(capture[i*numEvents + 3*len(keys) + 2*j]['arguments'][1], 'keydown', 'Backspace')
-                self.assertEqual(capture[i*numEvents + 3*len(keys) + 2*j + 1]['arguments'][0], f'KeyUp[{lang}]')
-                self.assertKeyEvent(capture[i*numEvents + 3*len(keys) + 2*j + 1]['arguments'][1], 'keyup', 'Backspace')
-
-                self.assertEqual(capture[i*numEvents + 5*len(keys)]['arguments'][0], f'KeyDown[{lang}]')
-                self.assertKeyEvent(capture[i*numEvents + 5*len(keys)]['arguments'][1], 'keydown', letter)
-                self.assertEqual(capture[i*numEvents + 5*len(keys) + 1]['arguments'][0], f'KeyPress[{lang}]')
-                self.assertKeyEvent(capture[i*numEvents + 5*len(keys) + 1]['arguments'][1], 'keypress', letter)
-                self.assertEqual(capture[i*numEvents + 5*len(keys) + 2]['arguments'][0], f'KeyUp[{lang}]')
-                self.assertKeyEvent(capture[i*numEvents + 5*len(keys) + 2]['arguments'][1], 'keyup', letter)
+                self.assertEqual(capture[i*numEvents + 4*len(keys) + 3*j]['arguments'][0], f'Event[{lang}]')
+                self.assertKeyEvent(capture[i*numEvents + 4*len(keys) + 3*j]['arguments'][1], 'keydown', 'Backspace')
+                self.assertEqual(capture[i*numEvents + 4*len(keys) + 3*j + 1]['arguments'][0], f'Event[{lang}]')
+                self.assertInputEvent(capture[i*numEvents + 4*len(keys) + 3*j + 1]['arguments'][1], 'input', 'Backspace')
+                self.assertEqual(capture[i*numEvents + 4*len(keys) + 3*j + 2]['arguments'][0], f'Event[{lang}]')
+                self.assertKeyEvent(capture[i*numEvents + 4*len(keys) + 3*j + 2]['arguments'][1], 'keyup', 'Backspace')
+            self.assertEqual(capture[i*numEvents + 7*len(keys)]['arguments'][0], f'Event[{lang}]')
+            self.assertKeyEvent(capture[i*numEvents + 7*len(keys)]['arguments'][1], 'keydown', letter)
+            self.assertEqual(capture[i*numEvents + 7*len(keys) + 1]['arguments'][0], f'Event[{lang}]')
+            self.assertKeyEvent(capture[i*numEvents + 7*len(keys) + 1]['arguments'][1], 'keypress', letter)
+            self.assertEqual(capture[i*numEvents + 7*len(keys) + 2]['arguments'][0], f'Event[{lang}]')
+            self.assertInputEvent(capture[i*numEvents + 7*len(keys) + 2]['arguments'][1], 'input', letter)
+            self.assertEqual(capture[i*numEvents + 7*len(keys) + 3]['arguments'][0], f'Event[{lang}]')
+            self.assertKeyEvent(capture[i*numEvents + 7*len(keys) + 3]['arguments'][1], 'keyup', letter)
 
     @TestData(
         [{'lang': "ru", 'keys': k, 'letter': l} for k, l in dict({"TS": "Ц", "Ts": "Ц", "CH": "Ч", "Ch": "Ч"}).items()] +
@@ -207,34 +226,42 @@ class BaseTest(BrowserTestCase):
             textElement.send_keys(keys)
             self.assertEqual(self.getValue(textElement), letter * i)
 
-        capture = [record for record in self.browser.consoleCapture() if record['arguments'][0].startswith('Key')]
-        numEvents = 11 + 2 * len(keys) + 3
+        capture = [record for record in self.browser.consoleCapture() if record['arguments'][0].startswith('Event')]
+        numEvents = 15 + 3 * len(keys) + 4
         self.assertEqual(len(capture), 4*numEvents)
         for i in range(0, 4):
-            self.assertEqual(capture[i*numEvents]['arguments'][0], f'KeyDown[{lang}]')
+            self.assertEqual(capture[i*numEvents]['arguments'][0], f'Event[{lang}]')
             self.assertKeyEvent(capture[i*numEvents]['arguments'][1], 'keydown', keys[0])
-            self.assertEqual(capture[i*numEvents + 1]['arguments'][0], f'KeyPress[{lang}]')
+            self.assertEqual(capture[i*numEvents + 1]['arguments'][0], f'Event[{lang}]')
             self.assertKeyEvent(capture[i*numEvents + 1]['arguments'][1], 'keypress', keys[0])
-            self.assertEqual(capture[i*numEvents + 2]['arguments'][0], f'KeyUp[{lang}]')
-            self.assertKeyEvent(capture[i*numEvents + 2]['arguments'][1], 'keyup', keys[0])
-            # Key is corrected (5 events):
-            self.assertEqual(capture[i*numEvents + 8]['arguments'][0], f'KeyDown[{lang}]')
-            self.assertKeyEvent(capture[i*numEvents + 8]['arguments'][1], 'keydown', keys[1])
-            self.assertEqual(capture[i*numEvents + 8 + 1]['arguments'][0], f'KeyPress[{lang}]')
-            self.assertKeyEvent(capture[i*numEvents + 8 + 1]['arguments'][1], 'keypress', keys[1])
-            self.assertEqual(capture[i*numEvents + 8 + 2]['arguments'][0], f'KeyUp[{lang}]')
-            self.assertKeyEvent(capture[i*numEvents + 8 + 2]['arguments'][1], 'keyup', keys[1])
+            self.assertEqual(capture[i*numEvents + 2]['arguments'][0], f'Event[{lang}]')
+            self.assertInputEvent(capture[i*numEvents + 2]['arguments'][1], 'input', keys[0])
+            self.assertEqual(capture[i*numEvents + 3]['arguments'][0], f'Event[{lang}]')
+            self.assertKeyEvent(capture[i*numEvents + 3]['arguments'][1], 'keyup', keys[0])
+            # Key is corrected (7 events):
+            self.assertEqual(capture[i*numEvents + 11]['arguments'][0], f'Event[{lang}]')
+            self.assertKeyEvent(capture[i*numEvents + 11]['arguments'][1], 'keydown', keys[1])
+            self.assertEqual(capture[i*numEvents + 11 + 1]['arguments'][0], f'Event[{lang}]')
+            self.assertKeyEvent(capture[i*numEvents + 11 + 1]['arguments'][1], 'keypress', keys[1])
+            self.assertEqual(capture[i*numEvents + 11 + 2]['arguments'][0], f'Event[{lang}]')
+            self.assertInputEvent(capture[i*numEvents + 11 + 2]['arguments'][1], 'input', keys[1])
+            self.assertEqual(capture[i*numEvents + 11 + 3]['arguments'][0], f'Event[{lang}]')
+            self.assertKeyEvent(capture[i*numEvents + 11 + 3]['arguments'][1], 'keyup', keys[1])
             for j in range(0, len(keys)):
-                self.assertEqual(capture[i*numEvents + 11 + 2*j]['arguments'][0], f'KeyDown[{lang}]')
-                self.assertKeyEvent(capture[i*numEvents + 11 + 2*j]['arguments'][1], 'keydown', 'Backspace')
-                self.assertEqual(capture[i*numEvents + 11 + 2*j + 1]['arguments'][0], f'KeyUp[{lang}]')
-                self.assertKeyEvent(capture[i*numEvents + 11 + 2*j + 1]['arguments'][1], 'keyup', 'Backspace')
-            self.assertEqual(capture[i*numEvents + 11 + 2*len(keys)]['arguments'][0], f'KeyDown[{lang}]')
-            self.assertKeyEvent(capture[i*numEvents + 11 + 2*len(keys)]['arguments'][1], 'keydown', letter)
-            self.assertEqual(capture[i*numEvents + 11 + 2*len(keys) + 1]['arguments'][0], f'KeyPress[{lang}]')
-            self.assertKeyEvent(capture[i*numEvents + 11 + 2*len(keys) + 1]['arguments'][1], 'keypress', letter)
-            self.assertEqual(capture[i*numEvents + 11 + 2*len(keys) + 2]['arguments'][0], f'KeyUp[{lang}]')
-            self.assertKeyEvent(capture[i*numEvents + 11 + 2*len(keys) + 2]['arguments'][1], 'keyup', letter)
+                self.assertEqual(capture[i*numEvents + 15 + 3*j]['arguments'][0], f'Event[{lang}]')
+                self.assertKeyEvent(capture[i*numEvents + 15 + 3*j]['arguments'][1], 'keydown', 'Backspace')
+                self.assertEqual(capture[i*numEvents + 15 + 3*j + 1]['arguments'][0], f'Event[{lang}]')
+                self.assertInputEvent(capture[i*numEvents + 15 + 3*j + 1]['arguments'][1], 'input', 'Backspace')
+                self.assertEqual(capture[i*numEvents + 15 + 3*j + 2]['arguments'][0], f'Event[{lang}]')
+                self.assertKeyEvent(capture[i*numEvents + 15 + 3*j + 2]['arguments'][1], 'keyup', 'Backspace')
+            self.assertEqual(capture[i*numEvents + 15 + 3*len(keys)]['arguments'][0], f'Event[{lang}]')
+            self.assertKeyEvent(capture[i*numEvents + 15 + 3*len(keys)]['arguments'][1], 'keydown', letter)
+            self.assertEqual(capture[i*numEvents + 15 + 3*len(keys) + 1]['arguments'][0], f'Event[{lang}]')
+            self.assertKeyEvent(capture[i*numEvents + 15 + 3*len(keys) + 1]['arguments'][1], 'keypress', letter)
+            self.assertEqual(capture[i*numEvents + 15 + 3*len(keys) + 2]['arguments'][0], f'Event[{lang}]')
+            self.assertInputEvent(capture[i*numEvents + 15 + 3*len(keys) + 2]['arguments'][1], 'input', letter)
+            self.assertEqual(capture[i*numEvents + 15 + 3*len(keys) + 3]['arguments'][0], f'Event[{lang}]')
+            self.assertKeyEvent(capture[i*numEvents + 15 + 3*len(keys) + 3]['arguments'][1], 'keyup', letter)
 
     @TestData([
         {'lang': "ru", 'keys': k, 'letter': l} for k, l in dict({
@@ -253,47 +280,59 @@ class BaseTest(BrowserTestCase):
             textElement.send_keys(keys)
             self.assertEqual(self.getValue(textElement), letter * i)
 
-        capture = [record for record in self.browser.consoleCapture() if record['arguments'][0].startswith('Key')]
-        numEvents = 33
+        capture = [record for record in self.browser.consoleCapture() if record['arguments'][0].startswith('Event')]
+        numEvents = 46
         self.assertEqual(len(capture), 4*numEvents)
         for i in range(0, 4):
-            self.assertEqual(capture[i*numEvents]['arguments'][0], f'KeyDown[{lang}]')
+            self.assertEqual(capture[i*numEvents]['arguments'][0], f'Event[{lang}]')
             self.assertKeyEvent(capture[i*numEvents]['arguments'][1], 'keydown', keys[0])
-            self.assertEqual(capture[i*numEvents + 1]['arguments'][0], f'KeyPress[{lang}]')
+            self.assertEqual(capture[i*numEvents + 1]['arguments'][0], f'Event[{lang}]')
             self.assertKeyEvent(capture[i*numEvents + 1]['arguments'][1], 'keypress', keys[0])
-            self.assertEqual(capture[i*numEvents + 2]['arguments'][0], f'KeyUp[{lang}]')
-            self.assertKeyEvent(capture[i*numEvents + 2]['arguments'][1], 'keyup', keys[0])
-            self.assertEqual(capture[i*numEvents + 3]['arguments'][0], f'KeyDown[{lang}]')
-            self.assertKeyEvent(capture[i*numEvents + 3]['arguments'][1], 'keydown', keys[1])
-            self.assertEqual(capture[i*numEvents + 3 + 1]['arguments'][0], f'KeyPress[{lang}]')
-            self.assertKeyEvent(capture[i*numEvents + 3 + 1]['arguments'][1], 'keypress', keys[1])
-            self.assertEqual(capture[i*numEvents + 3 + 2]['arguments'][0], f'KeyUp[{lang}]')
-            self.assertKeyEvent(capture[i*numEvents + 3 + 2]['arguments'][1], 'keyup', keys[1])
-            # Keys are corrected (7 events):
-            self.assertEqual(capture[i*numEvents + 13]['arguments'][0], f'KeyDown[{lang}]')
-            self.assertKeyEvent(capture[i*numEvents + 13]['arguments'][1], 'keydown', keys[2])
-            self.assertEqual(capture[i*numEvents + 13 + 1]['arguments'][0], f'KeyPress[{lang}]')
-            self.assertKeyEvent(capture[i*numEvents + 13 + 1]['arguments'][1], 'keypress', keys[2])
-            self.assertEqual(capture[i*numEvents + 13 + 2]['arguments'][0], f'KeyUp[{lang}]')
-            self.assertKeyEvent(capture[i*numEvents + 13 + 2]['arguments'][1], 'keyup', keys[2])
-            # Key is corrected (5 events):
-            self.assertEqual(capture[i*numEvents + 21]['arguments'][0], f'KeyDown[{lang}]')
-            self.assertKeyEvent(capture[i*numEvents + 21]['arguments'][1], 'keydown', keys[3])
-            self.assertEqual(capture[i*numEvents + 21 + 1]['arguments'][0], f'KeyPress[{lang}]')
-            self.assertKeyEvent(capture[i*numEvents + 21 + 1]['arguments'][1], 'keypress', keys[3])
-            self.assertEqual(capture[i*numEvents + 21 + 2]['arguments'][0], f'KeyUp[{lang}]')
-            self.assertKeyEvent(capture[i*numEvents + 21 + 2]['arguments'][1], 'keyup', keys[3])
+            self.assertEqual(capture[i*numEvents + 2]['arguments'][0], f'Event[{lang}]')
+            self.assertInputEvent(capture[i*numEvents + 2]['arguments'][1], 'input', keys[0])
+            self.assertEqual(capture[i*numEvents + 3]['arguments'][0], f'Event[{lang}]')
+            self.assertKeyEvent(capture[i*numEvents + 3]['arguments'][1], 'keyup', keys[0])
+            self.assertEqual(capture[i*numEvents + 4]['arguments'][0], f'Event[{lang}]')
+            self.assertKeyEvent(capture[i*numEvents + 4]['arguments'][1], 'keydown', keys[1])
+            self.assertEqual(capture[i*numEvents + 4 + 1]['arguments'][0], f'Event[{lang}]')
+            self.assertKeyEvent(capture[i*numEvents + 4 + 1]['arguments'][1], 'keypress', keys[1])
+            self.assertEqual(capture[i*numEvents + 4 + 2]['arguments'][0], f'Event[{lang}]')
+            self.assertInputEvent(capture[i*numEvents + 4 + 2]['arguments'][1], 'input', keys[1])
+            self.assertEqual(capture[i*numEvents + 4 + 3]['arguments'][0], f'Event[{lang}]')
+            self.assertKeyEvent(capture[i*numEvents + 4 + 3]['arguments'][1], 'keyup', keys[1])
+            # Keys are corrected (10 events):
+            self.assertEqual(capture[i*numEvents + 18]['arguments'][0], f'Event[{lang}]')
+            self.assertKeyEvent(capture[i*numEvents + 18]['arguments'][1], 'keydown', keys[2])
+            self.assertEqual(capture[i*numEvents + 18 + 1]['arguments'][0], f'Event[{lang}]')
+            self.assertKeyEvent(capture[i*numEvents + 18 + 1]['arguments'][1], 'keypress', keys[2])
+            self.assertEqual(capture[i*numEvents + 18 + 2]['arguments'][0], f'Event[{lang}]')
+            self.assertInputEvent(capture[i*numEvents + 18 + 2]['arguments'][1], 'input', keys[2])
+            self.assertEqual(capture[i*numEvents + 18 + 3]['arguments'][0], f'Event[{lang}]')
+            self.assertKeyEvent(capture[i*numEvents + 18 + 3]['arguments'][1], 'keyup', keys[2])
+            # Key is corrected (7 events):
+            self.assertEqual(capture[i*numEvents + 29]['arguments'][0], f'Event[{lang}]')
+            self.assertKeyEvent(capture[i*numEvents + 29]['arguments'][1], 'keydown', keys[3])
+            self.assertEqual(capture[i*numEvents + 29 + 1]['arguments'][0], f'Event[{lang}]')
+            self.assertKeyEvent(capture[i*numEvents + 29 + 1]['arguments'][1], 'keypress', keys[3])
+            self.assertEqual(capture[i*numEvents + 29 + 2]['arguments'][0], f'Event[{lang}]')
+            self.assertInputEvent(capture[i*numEvents + 29 + 2]['arguments'][1], 'input', keys[3])
+            self.assertEqual(capture[i*numEvents + 29 + 3]['arguments'][0], f'Event[{lang}]')
+            self.assertKeyEvent(capture[i*numEvents + 29 + 3]['arguments'][1], 'keyup', keys[3])
             for j in range(0, 3):
-                self.assertEqual(capture[i*numEvents + 24 + 2*j]['arguments'][0], f'KeyDown[{lang}]')
-                self.assertKeyEvent(capture[i*numEvents + 24 + 2*j]['arguments'][1], 'keydown', 'Backspace')
-                self.assertEqual(capture[i*numEvents + 24 + 2*j + 1]['arguments'][0], f'KeyUp[{lang}]')
-                self.assertKeyEvent(capture[i*numEvents + 24 + 2*j + 1]['arguments'][1], 'keyup', 'Backspace')
-            self.assertEqual(capture[i*numEvents + 30]['arguments'][0], f'KeyDown[{lang}]')
-            self.assertKeyEvent(capture[i*numEvents + 30]['arguments'][1], 'keydown', letter)
-            self.assertEqual(capture[i*numEvents + 30 + 1]['arguments'][0], f'KeyPress[{lang}]')
-            self.assertKeyEvent(capture[i*numEvents + 30 + 1]['arguments'][1], 'keypress', letter)
-            self.assertEqual(capture[i*numEvents + 30 + 2]['arguments'][0], f'KeyUp[{lang}]')
-            self.assertKeyEvent(capture[i*numEvents + 30 + 2]['arguments'][1], 'keyup', letter)
+                self.assertEqual(capture[i*numEvents + 33 + 3*j]['arguments'][0], f'Event[{lang}]')
+                self.assertKeyEvent(capture[i*numEvents + 33 + 3*j]['arguments'][1], 'keydown', 'Backspace')
+                self.assertEqual(capture[i*numEvents + 33 + 3*j + 1]['arguments'][0], f'Event[{lang}]')
+                self.assertInputEvent(capture[i*numEvents + 33 + 3*j + 1]['arguments'][1], 'input', 'Backspace')
+                self.assertEqual(capture[i*numEvents + 33 + 3*j + 2]['arguments'][0], f'Event[{lang}]')
+                self.assertKeyEvent(capture[i*numEvents + 33 + 3*j + 2]['arguments'][1], 'keyup', 'Backspace')
+            self.assertEqual(capture[i*numEvents + 42]['arguments'][0], f'Event[{lang}]')
+            self.assertKeyEvent(capture[i*numEvents + 42]['arguments'][1], 'keydown', letter)
+            self.assertEqual(capture[i*numEvents + 42 + 1]['arguments'][0], f'Event[{lang}]')
+            self.assertKeyEvent(capture[i*numEvents + 42 + 1]['arguments'][1], 'keypress', letter)
+            self.assertEqual(capture[i*numEvents + 42 + 2]['arguments'][0], f'Event[{lang}]')
+            self.assertInputEvent(capture[i*numEvents + 42 + 2]['arguments'][1], 'input', letter)
+            self.assertEqual(capture[i*numEvents + 42 + 3]['arguments'][0], f'Event[{lang}]')
+            self.assertKeyEvent(capture[i*numEvents + 42 + 3]['arguments'][1], 'keyup', letter)
 
     @TestData({
         "English (upper)": {
@@ -357,12 +396,14 @@ class BaseTest(BrowserTestCase):
         for keys in inputData.split(' '):
             textElement.send_keys(keys)
 
-            capture = [record for record in self.browser.consoleCapture() if record['arguments'][0].startswith('Key')]
-            self.assertEqual(capture[-3]['arguments'][0], f'KeyDown[{lang}]')
-            self.assertKeyEvent(capture[-3]['arguments'][1], 'keydown', outputData[l])
-            self.assertEqual(capture[-2]['arguments'][0], f'KeyPress[{lang}]')
-            self.assertKeyEvent(capture[-2]['arguments'][1], 'keypress', outputData[l])
-            self.assertEqual(capture[-1]['arguments'][0], f'KeyUp[{lang}]')
+            capture = [record for record in self.browser.consoleCapture() if record['arguments'][0].startswith('Event')]
+            self.assertEqual(capture[-4]['arguments'][0], f'Event[{lang}]')
+            self.assertKeyEvent(capture[-4]['arguments'][1], 'keydown', outputData[l])
+            self.assertEqual(capture[-3]['arguments'][0], f'Event[{lang}]')
+            self.assertKeyEvent(capture[-3]['arguments'][1], 'keypress', outputData[l])
+            self.assertEqual(capture[-2]['arguments'][0], f'Event[{lang}]')
+            self.assertInputEvent(capture[-2]['arguments'][1], 'input', outputData[l])
+            self.assertEqual(capture[-1]['arguments'][0], f'Event[{lang}]')
             self.assertKeyEvent(capture[-1]['arguments'][1], 'keyup', outputData[l])
 
             l = l + 1

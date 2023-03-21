@@ -174,19 +174,26 @@
             var keys = mapping[t.slice(posStart - l, posStart)];
             // Delete original text:
             for (var c = 1; c <= l; c++) {
-                var backspaceEventInit = {
+                var backspaceKeyEventInit = {
                     key: "Backspace",
                     code: "Backspace",
                     view: e.view,
                     bubbles: true,
                     cancelable: true,
                 };
+                var backspaceInputEventInit = {
+                    inputType: "deleteContentBackward",
+                    view: e.view,
+                    bubbles: true,
+                    cancelable: true,
+                };
 
-                e.target.dispatchEvent(new KeyboardEvent('keydown', backspaceEventInit));
+                e.target.dispatchEvent(new KeyboardEvent('keydown', backspaceKeyEventInit));
                 e.target.value = t.slice(0, posStart - c) + t.slice(posStart);
+                e.target.dispatchEvent(new InputEvent('input', backspaceInputEventInit));
                 e.target.selectionStart = posStart - c;
                 e.target.selectionEnd = posEnd - c;
-                e.target.dispatchEvent(new KeyboardEvent('keyup', backspaceEventInit));
+                e.target.dispatchEvent(new KeyboardEvent('keyup', backspaceKeyEventInit));
             }
             // Add mapped text:
             for (var c = 1; c <= keys.length; c++) {
@@ -198,12 +205,20 @@
                     bubbles: true,
                     cancelable: true,
                 };
+                var inputEventInit = {
+                    data: keys[c - 1],
+                    inputType: "insertText",
+                    view: e.view,
+                    bubbles: true,
+                    cancelable: true,
+                };
 
                 e.target.dispatchEvent(new KeyboardEvent('keydown', keyEventInit));
                 e.target.value = t.slice(0, posStart - l) + keys.slice(0, c) + t.slice(posStart);
+                e.target.dispatchEvent(new KeyboardEvent('keypress', keyEventInit));
+                e.target.dispatchEvent(new InputEvent('input', inputEventInit));
                 e.target.selectionStart = posStart - l + c;
                 e.target.selectionEnd = posEnd - l + c;
-                e.target.dispatchEvent(new KeyboardEvent('keypress', keyEventInit));
                 e.target.dispatchEvent(new KeyboardEvent('keyup', keyEventInit));
             }
         },

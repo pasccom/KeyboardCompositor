@@ -31,6 +31,9 @@
                 height: 100px;
                 border: 1px solid black;
             }
+            input[type="text"] {
+                height: 27px;
+            }
         </style>
     </head>
     <body>
@@ -42,14 +45,20 @@
         <div id="inlineBlockEditableDiv" contentEditable="true" style="display: inline-block"></div>
         <script type="text/javascript">
             function logEvents(element) {
+                element.addEventListener('input', function(e) {
+                    console.log('Event[' + element.getAttribute('kc-lang') + ']', e);
+                });
+                element.addEventListener('selectionchange', function(e) {
+                    console.log('SelectionChange[' + element.getAttribute('kc-lang') + ']', e);
+                });
                 element.addEventListener('keydown', function(e) {
-                    console.log('KeyDown[' + element.getAttribute('kc-lang') + ']', e);
+                    console.log('Event[' + element.getAttribute('kc-lang') + ']', e);
                 });
                 element.addEventListener('keyup', function(e) {
-                    console.log('KeyUp[' + element.getAttribute('kc-lang') + ']', e);
+                    console.log('Event[' + element.getAttribute('kc-lang') + ']', e);
                 });
                 element.addEventListener('keypress', function(e) {
-                    console.log('KeyPress[' + element.getAttribute('kc-lang') + ']', e);
+                    console.log('Event[' + element.getAttribute('kc-lang') + ']', e);
                 });
                 element.addEventListener('focus', function(e) {
                     console.log('Focus[' + element.getAttribute('kc-lang') + ']', e);
